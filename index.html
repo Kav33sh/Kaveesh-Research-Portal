@@ -1,0 +1,685 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wave Impedance Haptics — Portfolio</title>
+<style>
+  :root{
+    --bg:#0b1222; --panel:#0f172a; --ink:#e5e7eb; --muted:#94a3b8;
+    --accent:#22d3ee; --accent2:#60a5fa; --ok:#22c55e; --warn:#f59e0b; --danger:#ef4444;
+    --br:#1f2937;
+  }
+  *{box-sizing:border-box;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  body{margin:0;background:linear-gradient(180deg,#0b1222,#0a0f1a);color:var(--ink)}
+  header{position:sticky;top:0;z-index:10;background:rgba(15,23,42,.8);backdrop-filter:blur(8px);border-bottom:1px solid var(--br);}
+  .bar{max-width:1200px;margin:0 auto;display:flex;gap:16px;align-items:center;padding:12px 16px}
+  h1{font-size:18px;margin:0;color:#e2e8f0}
+  nav{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+  .tab{border:1px solid var(--br);color:var(--ink);background:#0b1324;border-radius:999px;padding:8px 12px;cursor:pointer;font-size:14px}
+  .tab.active{background:var(--accent);color:#0a0f1a;border-color:transparent}
+  main{max-width:1200px;margin:20px auto;padding:0 16px}
+  .card{background:var(--panel);border:1px solid var(--br);border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .btn{border:1px solid var(--br);background:#0b1324;color:var(--ink);border-radius:10px;padding:8px 12px;cursor:pointer}
+  .btn:hover{background:#12203a}
+  .btn.primary{background:var(--accent);color:#08101c;border-color:transparent}
+  .btn.danger{border-color:#7f1d1d;background:#220a0a}
+  input[type="text"], input[type="url"], textarea{width:100%;background:#0b1324;border:1px solid var(--br);border-radius:10px;color:var(--ink);padding:10px}
+  textarea{min-height:100px}
+  .grid{display:grid;gap:12px}
+  .two{grid-template-columns:1.1fr .9fr} /* wider left column */
+  .three{grid-template-columns:repeat(3,1fr)}
+  .pill{display:inline-flex;gap:6px;align-items:center;background:#0b1324;border:1px solid var(--br);border-radius:999px;padding:6px 10px;color:var(--muted);font-size:12px}
+  .muted{color:var(--muted);font-size:13px}
+  .hidden{display:none}
+  /* Editor (for Learnings page) */
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+  .editor{background:#0b1324;border:1px dashed #334155;border-radius:12px;padding:12px;min-height:240px}
+  .editor:focus{outline:2px solid var(--accent)}
+  /* File list */
+  .file{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--br);border-radius:10px;padding:8px 10px;background:#0b1324}
+  .file i{font-style:normal;color:var(--muted);font-size:12px}
+  /* Checklist */
+  .check-item{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--br);border-radius:10px;padding:10px;background:#0b1324}
+  .check-item.done{border-color:#12422a;background:#0c1f16}
+  .check-title{font-weight:600}
+  .strike{text-decoration:line-through;color:#9ca3af}
+  /* Link list */
+  .link-item{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--br);border-radius:10px;padding:10px;background:#0b1324}
+  a{color:var(--accent2);text-decoration:none}
+  a:hover{text-decoration:underline}
+  footer{max-width:1200px;margin:20px auto;padding:0 16px 40px;color:#93a3b8;font-size:12px}
+
+  /* Home: Posts */
+  .post{background:#0b1324;border:1px solid var(--br);border-radius:12px;padding:12px;display:grid;gap:8px}
+  .post img{max-width:100%;border-radius:10px;border:1px solid #223047}
+</style>
+
+<!-- Markdown renderer for post bodies -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<!-- Supabase client -->
+<script type="module">
+  import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+  // ==== YOUR SUPABASE PROJECT (Step 4 done) ====
+  const PROJECT_URL = "https://vczxjeoairhytagzpxkb.supabase.co";
+  const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZjenhqZW9haXJoeXRhZ3pweGtiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2MjYwMzIsImV4cCI6MjA3MTIwMjAzMn0.FRv4USQT8RcJAjstfLkLfWbwO13gPcFDB2R23hNxLkU";
+  window.supabase = createClient(PROJECT_URL, ANON_KEY);
+</script>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <h1>Kaveesh Kanagaraj - Research Portal</h1>
+    <nav id="tabs">
+      <button class="tab active" data-tab="home">Home</button>
+      <button class="tab" data-tab="learnings">Learnings</button>
+      <button class="tab" data-tab="checklist">Checklist</button>
+      <button class="tab" data-tab="prof">Prof. Katsura</button>
+      <button class="tab" data-tab="models">Models</button>
+      <button class="tab" data-tab="articles">Articles</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- HOME (Supabase-connected Posts) -->
+  <section id="home" class="card">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <h2>Home</h2>
+      <!-- Auth bar -->
+      <div id="authBar" class="row">
+        <button class="btn" id="login">Sign in with GitHub</button>
+        <button class="btn" id="logout" style="display:none">Logout</button>
+      </div>
+    </div>
+
+    <div class="grid two">
+      <!-- LEFT: Dashboard + Files + Posts -->
+      <div>
+        <div class="card">
+          <h3>Dashboard</h3>
+          <label class="pill">Hero Title</label>
+          <input id="homeTitle" type="text" placeholder="e.g., My Journey in Control Engineering">
+          <label class="pill">Hero Subtitle</label>
+          <input id="homeSubtitle" type="text" placeholder="e.g., Building toward wave impedance haptics">
+          <label class="pill">About</label>
+          <textarea id="homeAbout" placeholder="Short summary about your research and interests..."></textarea>
+          <div class="row">
+            <button class="btn primary" id="saveHome">Save Home</button>
+            <span class="muted" id="homeSaved"></span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Files (local folder)</h3>
+          <div class="row">
+            <input type="file" id="filePicker" multiple class="btn">
+            <button class="btn" id="clearFiles">Clear All</button>
+          </div>
+          <div id="fileList" style="margin-top:10px;display:grid;gap:8px"></div>
+          <p class="muted">Files are stored locally in your browser (IndexedDB). To share publicly, upload to your repo or Supabase Storage and link in a post.</p>
+        </div>
+
+        <div class="card">
+          <h3>Posts</h3>
+          <p class="muted">Public feed from Supabase (anyone can view). Sign in to create a new post.</p>
+          <div id="postList" class="grid" style="gap:10px"></div>
+
+          <!-- New Post (only when logged in) -->
+          <div id="newPost" class="card hidden" style="margin-top:12px">
+            <h3>New Post</h3>
+            <input id="pTitle" type="text" placeholder="Title">
+            <textarea id="pBody" placeholder="Markdown content..."></textarea>
+            <input id="pImage" type="file" accept="image/*">
+            <div class="row">
+              <button class="btn primary" id="publish">Publish</button>
+            </div>
+            <div class="muted" id="pubMsg"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Notes -->
+      <div>
+        <div class="card">
+          <h3>Notes</h3>
+          <p class="muted">Write your study notes here. They auto-save in your browser (private).</p>
+          <textarea id="homeNotes" placeholder="Write your study notes..."></textarea>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LEARNINGS -->
+  <section id="learnings" class="card hidden">
+    <h2>Learnings (Notebook)</h2>
+    <p class="muted">Type notes, paste images, and format like a lightweight OneNote. All content is saved locally.</p>
+    <div class="toolbar">
+      <button class="btn" data-cmd="bold"><b>B</b></button>
+      <button class="btn" data-cmd="italic"><i>I</i></button>
+      <button class="btn" data-cmd="underline"><u>U</u></button>
+      <button class="btn" id="h1">H1</button>
+      <button class="btn" id="h2">H2</button>
+      <button class="btn" id="bul">• List</button>
+      <button class="btn" id="img">Insert Image</button>
+      <button class="btn primary" id="saveNote">Save</button>
+      <span class="muted" id="noteSaved"></span>
+    </div>
+    <div id="editor" class="editor" contenteditable="true"></div>
+  </section>
+
+  <!-- CHECKLIST -->
+  <section id="checklist" class="card hidden">
+    <h2>Checklist</h2>
+    <p class="muted">Track key topics to master for your research plan. Your progress is saved.</p>
+    <div id="checkContainer" class="grid" style="gap:10px"></div>
+    <div class="row" style="margin-top:10px">
+      <input id="newItem" type="text" placeholder="Add a custom checklist item...">
+      <button class="btn" id="addItem">Add</button>
+      <button class="btn" id="resetChecklist">Reset Defaults</button>
+    </div>
+  </section>
+
+  <!-- PROF. KATSURA -->
+  <section id="prof" class="card hidden">
+    <h2>Prof. Katsura — Lab & Papers</h2>
+    <p class="muted">Quick access to laboratory websites and selected publications relevant to your topic.</p>
+    <div class="grid" id="profLinks" style="gap:8px"></div>
+    <div class="card" style="margin-top:16px">
+      <h3>Add Link</h3>
+      <div class="row">
+        <input id="linkTitle" type="text" placeholder="Title (e.g., Wave Dynamics paper)">
+        <input id="linkURL" type="url" placeholder="https://...">
+        <button class="btn" id="addLink">Add</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODELS -->
+  <section id="models" class="card hidden">
+    <h2>Models & Demos</h2>
+    <p class="muted">Register simulations, code repos, or small demos. Paste links to GitHub, Colab, or upload small assets.</p>
+    <div id="modelList" class="grid" style="gap:8px"></div>
+    <div class="card" style="margin-top:16px">
+      <h3>Add Model</h3>
+      <div class="grid two">
+        <input id="modelTitle" type="text" placeholder="e.g., MCS Python Simulation">
+        <input id="modelURL" type="url" placeholder="https://github.com/... or local file link">
+      </div>
+      <textarea id="modelDesc" placeholder="Short description (what it shows, key metrics, how it ties to wave impedance)..."></textarea>
+      <div class="row">
+        <button class="btn" id="addModel">Add Model</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ARTICLES -->
+  <section id="articles" class="card hidden">
+    <h2>Articles & Papers (Related Work)</h2>
+    <p class="muted">Collect papers related to wave impedance control, bilateral teleoperation, disturbance observers, and haptics.</p>
+    <div id="articleList" class="grid" style="gap:8px"></div>
+    <div class="card" style="margin-top:16px">
+      <h3>Add Article</h3>
+      <div class="grid two">
+        <input id="articleTitle" type="text" placeholder="Paper title">
+        <input id="articleURL" type="url" placeholder="https://doi.org/... or publisher link">
+      </div>
+      <textarea id="articleNotes" placeholder="Why is this relevant to your plan? Key insight or quote (paraphrase)."></textarea>
+      <div class="row">
+        <button class="btn" id="addArticle">Add Article</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  Local notes & files are private in your browser. Public posts & images are loaded from Supabase so anyone can view them.
+</footer>
+
+<script>
+// ---------- Tab navigation ----------
+const tabs = document.querySelectorAll('.tab');
+tabs.forEach(t=>t.addEventListener('click', ()=>{
+  tabs.forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  document.querySelectorAll('main > section').forEach(s=>s.classList.add('hidden'));
+  document.getElementById(t.dataset.tab).classList.remove('hidden');
+  localStorage.setItem('activeTab', t.dataset.tab);
+}));
+const savedTab = localStorage.getItem('activeTab');
+if(savedTab){
+  tabs.forEach(t=>{ if(t.dataset.tab===savedTab){ t.click(); }});
+}
+
+// ---------- HOME content ----------
+const homeTitle = document.getElementById('homeTitle');
+const homeSubtitle = document.getElementById('homeSubtitle');
+const homeAbout = document.getElementById('homeAbout');
+const homeSaved = document.getElementById('homeSaved');
+const homeNotes = document.getElementById('homeNotes');
+
+function loadHome(){
+  homeTitle.value = localStorage.getItem('homeTitle') || "My Journey in Control Engineering";
+  homeSubtitle.value = localStorage.getItem('homeSubtitle') || "Building toward wave impedance-based haptics for VR and teleoperation";
+  homeAbout.value = localStorage.getItem('homeAbout') || "This space collects my learnings, code, and experiments aligned with Prof. Katsura’s research themes (wave systems, bilateral teleoperation, disturbance observers, abstraction).";
+  homeNotes.value = localStorage.getItem('homeNotes') || "";
+}
+document.getElementById('saveHome').onclick = ()=>{
+  localStorage.setItem('homeTitle', homeTitle.value);
+  localStorage.setItem('homeSubtitle', homeSubtitle.value);
+  localStorage.setItem('homeAbout', homeAbout.value);
+  homeSaved.textContent = "Saved ✓";
+  setTimeout(()=>homeSaved.textContent="",1200);
+};
+homeNotes.addEventListener('input', ()=> localStorage.setItem('homeNotes', homeNotes.value));
+loadHome();
+
+// ---------- IndexedDB for files ----------
+let db;
+const DB_NAME = 'portfolioFilesDB';
+const STORE = 'files';
+const fileList = document.getElementById('fileList');
+function initDB(){
+  return new Promise((resolve,reject)=>{
+    const req = indexedDB.open(DB_NAME,1);
+    req.onupgradeneeded = e=>{
+      const db = e.target.result;
+      if(!db.objectStoreNames.contains(STORE)){
+        db.createObjectStore(STORE,{keyPath:'id', autoIncrement:true});
+      }
+    };
+    req.onsuccess = e=>{ db=e.target.result; resolve(); };
+    req.onerror = e=>reject(e);
+  });
+}
+function addFiles(files){
+  const tx = db.transaction(STORE,'readwrite');
+  const store = tx.objectStore(STORE);
+  Array.from(files).forEach(f=>{
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      store.add({name:f.name, type:f.type, size:f.size, data:reader.result, ts:Date.now()});
+      tx.oncomplete = renderFiles;
+    };
+    reader.readAsArrayBuffer(f);
+  });
+}
+function renderFiles(){
+  const tx = db.transaction(STORE,'readonly');
+  const store = tx.objectStore(STORE);
+  const req = store.getAll();
+  req.onsuccess = ()=>{
+    const items = req.result.sort((a,b)=>b.ts-a.ts);
+    fileList.innerHTML = "";
+    items.forEach(item=>{
+      const url = URL.createObjectURL(new Blob([item.data], {type:item.type||'application/octet-stream'}));
+      const div = document.createElement('div');
+      div.className = 'file';
+      const left = document.createElement('div');
+      left.innerHTML = `<b>${item.name}</b> <i>(${Math.round(item.size/1024)} KB)</i>`;
+      const right = document.createElement('div');
+      const a = document.createElement('a');
+      a.href = url; a.download = item.name; a.textContent = 'Download';
+      a.style.marginRight='8px';
+      const del = document.createElement('button');
+      del.className='btn danger'; del.textContent='Remove';
+      del.onclick = ()=>{
+        const tx2 = db.transaction(STORE,'readwrite');
+        tx2.objectStore(STORE).delete(item.id);
+        tx2.oncomplete = renderFiles;
+      };
+      right.appendChild(a); right.appendChild(del);
+      div.appendChild(left); div.appendChild(right);
+      fileList.appendChild(div);
+    });
+  };
+}
+document.getElementById('filePicker').addEventListener('change', e=> addFiles(e.target.files));
+document.getElementById('clearFiles').onclick = ()=>{
+  const tx = db.transaction(STORE,'readwrite');
+  tx.objectStore(STORE).clear();
+  tx.oncomplete = renderFiles;
+};
+initDB().then(renderFiles);
+
+// ---------- Learnings rich editor ----------
+const editor = document.getElementById('editor');
+const noteSaved = document.getElementById('noteSaved');
+function loadNote(){ editor.innerHTML = localStorage.getItem('noteHTML') || 
+  `<h2>Week 1 — Foundations</h2>
+  <ul><li>Reviewed bilateral teleoperation and wave variables.</li>
+  <li>Built MCS (mouse → 2-link arm) & plotted RMSE.</li></ul>`; }
+loadNote();
+document.querySelectorAll('.toolbar [data-cmd]').forEach(btn=>{
+  btn.addEventListener('click', ()=> document.execCommand(btn.dataset.cmd, false, null));
+});
+document.getElementById('h1').onclick = ()=> document.execCommand('formatBlock', false, 'h1');
+document.getElementById('h2').onclick = ()=> document.execCommand('formatBlock', false, 'h2');
+document.getElementById('bul').onclick = ()=> document.execCommand('insertUnorderedList', false, null);
+document.getElementById('img').onclick = ()=>{
+  const input = document.createElement('input'); input.type='file'; input.accept='image/*';
+  input.onchange = e=>{
+    const f = e.target.files[0]; if(!f) return;
+    const r = new FileReader();
+    r.onload = ()=> document.execCommand('insertImage', false, r.result);
+    r.readAsDataURL(f);
+  };
+  input.click();
+};
+document.getElementById('saveNote').onclick = ()=>{
+  localStorage.setItem('noteHTML', editor.innerHTML);
+  noteSaved.textContent = "Saved ✓"; setTimeout(()=>noteSaved.textContent="", 1200);
+};
+
+// ---------- Checklist ----------
+const DEFAULT_ITEMS = [
+  "Review wave-variable theory for passivity over delays",
+  "Study bilateral teleoperation architectures (position-force, 4-ch)",
+  "Derive wave impedance mapping for 1-DOF mass-spring-damper",
+  "Understand infinite-order modeling / abstraction (Katsura lab)",
+  "Implement PD/LQR on a 2-link arm (sim)",
+  "Build Disturbance Observer (DOB) for motor/arm with friction)",
+  "Add modal-space separation for flexible dynamics",
+  "Implement time-delay blocks; analyze stability margins",
+  "Design passivity observer/passivity controller (PO/PC)",
+  "Implement energy tank / virtual energy shaping",
+  "Calibrate sensors (force/torque/IMU) — simulated",
+  "Construct wave-variable wrapped teleop loop (master-slave)",
+  "Design haptic rendering of virtual wall (impedance control)",
+  "Simulate aerospace task: docking port mating with force thresholds",
+  "Implement motion-copying system (MCS) [COMPLETED]",
+  "Benchmark RMSE/overshoot vs delay (0/50/100/150 ms)",
+  "Integrate VR front-end (Web demo) with path/error plots",
+  "Parameter ID via least-squares / Kalman for arm model",
+  "Anti-windup & saturation handling in controllers",
+  "Add safety envelope & soft limits in joint/EE space",
+  "Paper reading: Katsura – Wave Dynamics in 4-ch bilateral teleop (2024)",
+  "Paper reading: Modal-space control with elasticity (2023)",
+  "Paper reading: Periodic/Aperiodic separation filter (2020)",
+  "Paper reading: Energy disturbance observer (2014)",
+  "Draft methods section for thesis proposal",
+  "Prepare replication plan for hardware-in-the-loop in lab",
+  "Rehearse talk/demo for lab meeting"
+];
+const checkContainer = document.getElementById('checkContainer');
+function loadChecklist(){
+  let items = JSON.parse(localStorage.getItem('checklist')||'null');
+  if(!items){
+    items = DEFAULT_ITEMS.map(t=>({t,done: t.includes('[COMPLETED]') || t.toLowerCase().includes('motion-copying')}));
+    localStorage.setItem('checklist', JSON.stringify(items));
+  }
+  renderChecklist(items);
+}
+function renderChecklist(items){
+  checkContainer.innerHTML = "";
+  items.forEach((it,idx)=>{
+    const div = document.createElement('div'); div.className='check-item'+(it.done?' done':'');
+    const cb = document.createElement('input'); cb.type='checkbox'; cb.checked=!!it.done;
+    const title = document.createElement('div'); title.className='check-title'; title.textContent=it.t;
+    if(it.done) title.classList.add('strike');
+    cb.onchange = ()=>{
+      it.done = cb.checked;
+      const all = JSON.parse(localStorage.getItem('checklist'));
+      all[idx]=it; localStorage.setItem('checklist', JSON.stringify(all));
+      renderChecklist(all);
+    };
+    const del = document.createElement('button'); del.className='btn danger'; del.textContent='Remove';
+    del.onclick = ()=>{
+      const all = JSON.parse(localStorage.getItem('checklist'));
+      all.splice(idx,1); localStorage.setItem('checklist', JSON.stringify(all));
+      renderChecklist(all);
+    };
+    div.appendChild(cb);
+    const inner = document.createElement('div'); inner.style.flex='1';
+    inner.appendChild(title);
+    div.appendChild(inner);
+    div.appendChild(del);
+    checkContainer.appendChild(div);
+  });
+}
+document.getElementById('addItem').onclick = ()=>{
+  const v = document.getElementById('newItem').value.trim(); if(!v) return;
+  const all = JSON.parse(localStorage.getItem('checklist'));
+  all.push({t:v,done:false}); localStorage.setItem('checklist', JSON.stringify(all));
+  document.getElementById('newItem').value="";
+  renderChecklist(all);
+};
+document.getElementById('resetChecklist').onclick = ()=>{
+  localStorage.removeItem('checklist'); loadChecklist();
+};
+loadChecklist();
+
+// ---------- Prof. Katsura links ----------
+const profLinks = document.getElementById('profLinks');
+const DEFAULT_LINKS = [
+  {title:"Katsura Laboratory (Keio) — Homepage", url:"https://www.katsura.sd.keio.ac.jp/"},
+  {title:"Keio Researcher Database — Seiichiro Katsura", url:"https://k-ris.keio.ac.jp/html/100011690_en.html"},
+  {title:"Research Introduction Video", url:"https://www.youtube.com/watch?v=Q3fUgDhkl0g"}
+];
+function loadLinks(){
+  const list = JSON.parse(localStorage.getItem('profLinks')||'null') || DEFAULT_LINKS;
+  localStorage.setItem('profLinks', JSON.stringify(list));
+  renderLinks(list);
+}
+function renderLinks(list){
+  profLinks.innerHTML="";
+  list.forEach((ln,idx)=>{
+    const row = document.createElement('div'); row.className='link-item';
+    const a = document.createElement('a'); a.href=ln.url; a.target='_blank'; a.rel='noopener';
+    a.textContent = ln.title;
+    const del = document.createElement('button'); del.className='btn danger'; del.textContent='Remove';
+    del.onclick = ()=>{
+      const all = JSON.parse(localStorage.getItem('profLinks'));
+      all.splice(idx,1); localStorage.setItem('profLinks', JSON.stringify(all));
+      renderLinks(all);
+    };
+    row.appendChild(a); row.appendChild(del);
+    profLinks.appendChild(row);
+  });
+}
+document.getElementById('addLink').onclick = ()=>{
+  const t = document.getElementById('linkTitle').value.trim();
+  const u = document.getElementById('linkURL').value.trim();
+  if(!t || !u) return;
+  const all = JSON.parse(localStorage.getItem('profLinks'));
+  all.unshift({title:t, url:u}); localStorage.setItem('profLinks', JSON.stringify(all));
+  document.getElementById('linkTitle').value=""; document.getElementById('linkURL').value="";
+  renderLinks(all);
+};
+loadLinks();
+
+// ---------- Models ----------
+const modelList = document.getElementById('modelList');
+function loadModels(){
+  const list = JSON.parse(localStorage.getItem('models')||'null') || [
+    {title:"MCS Python Simulation", url:"#", desc:"Mouse → 2-link arm replay with PD and delay injection. Reports RMSE & max error."},
+    {title:"Web MCS Demo", url:"#", desc:"HTML/JS demo: record, resample, IK, PD replay, error plots. Good for talks."}
+  ];
+  localStorage.setItem('models', JSON.stringify(list));
+  renderModels(list);
+}
+function renderModels(list){
+  modelList.innerHTML="";
+  list.forEach((m,idx)=>{
+    const row = document.createElement('div'); row.className='link-item';
+    const left = document.createElement('div');
+    left.innerHTML = `<div style="font-weight:600">${m.title}</div><div class="muted">${m.desc}</div>`;
+    const right = document.createElement('div');
+    const a = document.createElement('a'); a.href=m.url; a.target="_blank"; a.textContent = "Open";
+    const del = document.createElement('button'); del.className='btn danger'; del.textContent='Remove'; del.style.marginLeft='8px';
+    del.onclick = ()=>{
+      const all = JSON.parse(localStorage.getItem('models'));
+      all.splice(idx,1); localStorage.setItem('models', JSON.stringify(all));
+      renderModels(all);
+    };
+    right.appendChild(a); right.appendChild(del);
+    row.appendChild(left); row.appendChild(right);
+    modelList.appendChild(row);
+  });
+}
+document.getElementById('addModel').onclick = ()=>{
+  const t = document.getElementById('modelTitle').value.trim();
+  const u = document.getElementById('modelURL').value.trim();
+  const d = document.getElementById('modelDesc').value.trim();
+  if(!t) return;
+  const all = JSON.parse(localStorage.getItem('models'));
+  all.unshift({title:t, url:u||"#", desc:d||""});
+  localStorage.setItem('models', JSON.stringify(all));
+  document.getElementById('modelTitle').value="";
+  document.getElementById('modelURL').value="";
+  document.getElementById('modelDesc').value="";
+  renderModels(all);
+};
+loadModels();
+
+// ---------- Articles ----------
+const articleList = document.getElementById('articleList');
+function loadArticles(){
+  const list = JSON.parse(localStorage.getItem('articles')||'null') || [
+    {title:"Bilateral teleoperation with wave variables — survey/notes", url:"#", notes:"Passivity guarantee via energy variables; tie to haptic delay robustness."},
+    {title:"Disturbance Observers in Mechatronics — overview", url:"#", notes:"DOB for friction/load disturbance rejection; aligns with precision haptics."}
+  ];
+  localStorage.setItem('articles', JSON.stringify(list));
+  renderArticles(list);
+}
+function renderArticles(list){
+  articleList.innerHTML="";
+  list.forEach((a,idx)=>{
+    const row = document.createElement('div'); row.className='link-item';
+    const left = document.createElement('div');
+    left.innerHTML = `<div style="font-weight:600">${a.title}</div><div class="muted">${a.notes||""}</div>`;
+    const right = document.createElement('div');
+    const link = document.createElement('a'); link.href=a.url; link.target="_blank"; link.textContent="Open";
+    const del = document.createElement('button'); del.className='btn danger'; del.textContent='Remove'; del.style.marginLeft='8px';
+    del.onclick = ()=>{
+      const all = JSON.parse(localStorage.getItem('articles'));
+      all.splice(idx,1); localStorage.setItem('articles', JSON.stringify(all));
+      renderArticles(all);
+    };
+    right.appendChild(link); right.appendChild(del);
+    row.appendChild(left); row.appendChild(right);
+    articleList.appendChild(row);
+  });
+}
+document.getElementById('addArticle').onclick = ()=>{
+  const t = document.getElementById('articleTitle').value.trim();
+  const u = document.getElementById('articleURL').value.trim();
+  const n = document.getElementById('articleNotes').value.trim();
+  if(!t || !u) return;
+  const all = JSON.parse(localStorage.getItem('articles'));
+  all.unshift({title:t, url:u, notes:n});
+  localStorage.setItem('articles', JSON.stringify(all));
+  document.getElementById('articleTitle').value="";
+  document.getElementById('articleURL').value="";
+  document.getElementById('articleNotes').value="";
+  renderArticles(all);
+};
+loadArticles();
+</script>
+
+<!-- Supabase integration for Posts + Auth + Upload -->
+<script type="module">
+  const BUCKET_NAME = "portfolio"; // change if your bucket has a different name
+
+  const loginBtn  = document.getElementById('login');
+  const logoutBtn = document.getElementById('logout');
+  const newPostEl = document.getElementById('newPost');
+  const postList  = document.getElementById('postList');
+
+  // Auth state
+  supabase.auth.onAuthStateChange((_event, session) => {
+    const loggedIn = !!session;
+    loginBtn.style.display  = loggedIn ? 'none' : 'inline-block';
+    logoutBtn.style.display = loggedIn ? 'inline-block' : 'none';
+    newPostEl.classList.toggle('hidden', !loggedIn);
+  });
+
+  loginBtn.onclick = async () => {
+    await supabase.auth.signInWithOAuth({ provider: 'github' });
+  };
+  logoutBtn.onclick = async () => {
+    await supabase.auth.signOut();
+  };
+
+  // Load posts
+  async function loadPosts(){
+    const { data, error } = await supabase
+      .from('posts')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if(error){
+      postList.innerHTML = "<div class='muted'>Failed to load posts.</div>";
+      console.error(error);
+      return;
+    }
+    postList.innerHTML = "";
+    for(const p of data){
+      const card = document.createElement('div');
+      card.className = 'post';
+      const title = p.title || "Post";
+      const when = new Date(p.created_at).toLocaleString();
+      const imgTag = p.image_url ? `<img src="${p.image_url}" alt="post image">` : "";
+      const bodyHTML = window.marked ? marked.parse(p.body_md || "") : (p.body_md || "");
+      card.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-weight:700">${title}</div>
+          <div class="muted" style="font-size:12px">${when}</div>
+        </div>
+        ${imgTag}
+        <div class="post-body">${bodyHTML}</div>
+      `;
+      postList.appendChild(card);
+    }
+  }
+
+  // Upload image to Storage (public bucket)
+  async function uploadImage(file){
+    if(!file) return null;
+    const path = `posts/${Date.now()}_${file.name}`;
+    const { data, error } = await supabase
+      .storage
+      .from(BUCKET_NAME)
+      .upload(path, file, { upsert: false });
+    if(error){ console.error(error); return null; }
+    const { data: pub } = supabase.storage.from(BUCKET_NAME).getPublicUrl(path);
+    return pub.publicUrl;
+  }
+
+  // Publish new post
+  document.getElementById('publish').onclick = async ()=>{
+    const title = document.getElementById('pTitle').value.trim();
+    const body  = document.getElementById('pBody').value.trim();
+    const file  = document.getElementById('pImage').files[0];
+    const msg   = document.getElementById('pubMsg');
+
+    if(!title || !body){ msg.textContent = "Title and content required."; return; }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if(!user){ msg.textContent = "Please sign in first."; return; }
+
+    let image_url = null;
+    if(file){
+      image_url = await uploadImage(file);
+      if(!image_url){ msg.textContent = "Image upload failed."; return; }
+    }
+
+    const { error } = await supabase.from('posts').insert({
+      author: user.id, title, body_md: body, image_url
+    });
+    if(error){ msg.textContent = "Publish failed."; console.error(error); return; }
+
+    msg.textContent = "Published ✓";
+    document.getElementById('pTitle').value = "";
+    document.getElementById('pBody').value  = "";
+    document.getElementById('pImage').value = "";
+
+    loadPosts();
+  };
+
+  loadPosts();
+</script>
+</body>
+</html>
