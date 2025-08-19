@@ -596,12 +596,32 @@ loadArticles();
     newPostEl.classList.toggle('hidden', !loggedIn);
   });
 
-  loginBtn.onclick = async () => {
-    await supabase.auth.signInWithOAuth({ provider: 'github' });
-  };
-  logoutBtn.onclick = async () => {
-    await supabase.auth.signOut();
-  };
+  // Auth state
+supabase.auth.onAuthStateChange((_event, session) => {
+  const loggedIn = !!session;
+  loginBtn.style.display  = loggedIn ? 'none' : 'inline-block';
+  logoutBtn.style.display = loggedIn ? 'inline-block' : 'none';
+  newPostEl.classList.toggle('hidden', !loggedIn);
+});
+
+const RETURN_TO = "https://kav33sh.github.io/Kaveesh-Research-Portal/";
+
+loginBtn.onclick = async () => {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'github',
+    options: { redirectTo: RETURN_TO }
+  });
+  if (error) {
+    alert(`Login error: ${error.message}`);
+    console.error(error);
+  }
+};
+
+logoutBtn.onclick = async () => {
+  await supabase.auth.signOut();
+  // optional: force refresh after logout
+  location.href = RETURN_TO;
+};
 
   // Load posts
   async function loadPosts(){
