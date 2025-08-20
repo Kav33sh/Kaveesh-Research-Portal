@@ -522,16 +522,31 @@ initDB().then(renderFiles);
   }
 
   async function saveNote(){
-    const { data: { user } } = await supabase.auth.getUser();
-    if(!user){ noteStatus.textContent = "Sign in to save"; return; }
-    noteStatus.textContent = "Saving…";
-    const html = editor.innerHTML;
-    const { error } = await supabase.from('notes')
-      .upsert({ user_id: user.id, content: html })
-      .eq('user_id', user.id);
-    if(error){ console.error("Save note error:", error); noteStatus.textContent = "Save failed"; }
-    else { noteStatus.textContent = "Saved ✓"; }
+  const { data: { user }, error: userErr } = await supabase.auth.getUser();
+  if (userErr) {
+    console.error("Auth getUser error:", userErr);
+    noteStatus.textContent = "Save failed (auth)";
+    return;
   }
+  if(!user){ noteStatus.textContent = "Sign in to save"; return; }
+
+  noteStatus.textContent = "Saving…";
+  const html = editor.innerHTML;
+
+  const { error } = await supabase
+    .from('notes')
+    .upsert(
+      { user_id: user.id, content: html },   // include user_id to satisfy RLS
+      { onConflict: 'user_id' }              // use your unique constraint
+    );
+
+  if (error) {
+    console.error("Save note DB error:", error);
+    noteStatus.textContent = "Save failed";
+  } else {
+    noteStatus.textContent = "Saved ✓";
+  }
+}
 
   async function refreshToggleUI(userId){
     const { data, error } = await supabase
