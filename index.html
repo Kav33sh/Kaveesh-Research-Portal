@@ -441,26 +441,14 @@ initDB().then(renderFiles);
   };
 
   function defaultWelcomeHTML(){
-    return `
-    <h2>From Control Engineering Texts</h2>
+    return `<h2>Learnings</h2>
+    <p>This notebook is <b>publicly readable</b> when marked Public. Sign in to edit and auto-save.</p>
     <ul>
-      <li><b>Feedback and Stability:</b> Classical (Bode/Nyquist) and state-space methods emphasize stability under uncertainty. This maps to robust haptic teleoperation, where passivity must hold even with delays.</li>
-      <li><b>Passivity &amp; Impedance Control:</b> Unknown environments can destabilize the loop. Impedance/wave-based control enforces energy consistency, motivating wave variables in haptics.</li>
-      <li><b>Adaptive &amp; Robust Control:</b> I studied MRAC and H∞ control as tools to handle time-varying dynamics and variable-delay networks for teleoperation.</li>
-    </ul>
-    <h2>From Your Research Papers (Takeaways)</h2>
-    <ul>
-      <li><b>Wave Variable Transformation:</b> Transmitting effort/flow as wave variables keeps the channel passive, mitigating delay-induced instability. I will adopt this in my plan.</li>
-      <li><b>Impedance Matching &amp; Stability:</b> Wave impedance \(Z_w\) sets the transparency–stability tradeoff. I plan to study how \(Z_w\) choices affect haptic realism vs. robustness.</li>
-      <li><b>Energy-based Perspective:</b> Modeling the human–robot–environment loop as energy exchange aligns with passivity control principles to guarantee safe feedback.</li>
-      <li><b>Application Insight:</b> Your teleoperation/haptics studies show rigorous theory → working systems. My navigation/control background supports that same bridge.</li>
-    </ul>
-    <h3>Overall</h3>
-    <ul>
-      <li>Why wave-variable control is necessary (delay-induced instability).</li>
-      <li>How impedance parameters directly affect performance.</li>
-      <li>How passivity-based approaches guarantee stability in human-in-the-loop systems.</li>
+      <li>Summaries of Katsura Lab papers.</li>
+      <li>Experiments for wave-impedance haptics.</li>
+      <li>Paste images; they’re embedded inline.</li>
     </ul>`;
+  }
 
   async function loadPublicNote(){
     noteStatus.textContent="Loading public note…";
@@ -624,13 +612,7 @@ const profLinks = document.getElementById('profLinks');
 const DEFAULT_LINKS = [
   {title:"Katsura Laboratory (Keio) — Homepage", url:"https://www.katsura.sd.keio.ac.jp/"},
   {title:"Keio Researcher Database — Seiichiro Katsura", url:"https://k-ris.keio.ac.jp/html/100011690_en.html"},
-  {title:"Research Introduction Video", url:"https://www.youtube.com/watch?v=Q3fUgDhkl0g"},
-  {title:"Wave Dynamics Intrinsic in Symmetric Four-channel Bilateral Teleoperation (Mechatronics, 2024)", url:"https://www.sciencedirect.com/science/article/pii/S0957415824000746"},
-  {title:"Analysis of Magnetic Domain Structure of Grain-Oriented Electrical Steels (IEEE Trans. Magnetics, 2024)", url:"https://ieeexplore.ieee.org/document/10476633"},
-  {title:"Singularity-Free 3-Leg 6-DOF Spatial Parallel Robot with Actuation Redundancy (IEEJ JIA, 2023)", url:"https://www.jstage.jst.go.jp/article/ieejjia/13/2/13_23003740/_pdf/-char/en"},
-  {title:"Robust Velocity Control for Electromagnetic Friction Brake Based on Disturbance Observer (IEEJ JIA, 2023)", url:"https://www.jstage.jst.go.jp/article/ieejjia/12/5/12_22004484/_pdf/-char/en"},
-  {title:"Robust Speed Control of Uncertain Two-Mass System (Energies, 2023)", url:"https://ideas.repec.org/a/gam/jeners/v18y2025i8p1914-d1631191.html#:~:text=The%20paper%20proposes%20a%20Birch-inspired%20optimisation%20algorithm%20designed,robust%20speed%20control%20of%20a%20two-mass%20drive%20system"},
-  {title:"Motion-Copying System with In-Tool Sensing (IEEJ JIA, 2023)", url:"https://www.jstage.jst.go.jp/article/ieejjia/12/4/12_22004640/_pdf/-char/ja"}
+  {title:"Research Introduction Video", url:"https://www.youtube.com/watch?v=Q3fUgDhkl0g"}
 ];
 function loadLinks(){
   const list = JSON.parse(localStorage.getItem('profLinks')||'null') || DEFAULT_LINKS;
@@ -745,9 +727,7 @@ document.getElementById('addArticle').onclick=()=>{
   document.getElementById('articleTitle').value=""; document.getElementById('articleURL').value=""; document.getElementById('articleNotes').value="";
   renderArticles(all);
 };
-  }
 loadArticles();
 </script>
 </body>
 </html>
-  
