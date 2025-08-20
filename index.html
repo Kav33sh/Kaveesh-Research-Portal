@@ -29,40 +29,21 @@
   textarea{min-height:100px}
   .grid{display:grid;gap:12px}
   .two{grid-template-columns:1.1fr .9fr}
-  .pill{display:inline-flex;gap:6px;align-items:center;background:#0b1324;border:1px solid var(--br);border-radius:999px;padding:6px 10px;color:var(--muted);font-size:12px}
-  .muted{color:var(--muted);font-size:13px}
+  .pill{display:inline-flex;gap:6px;align-items:center;background:#0b1324;border:1px solid var(--br);border-radius:999px;padding:6px 10px;color:#94a3b8;font-size:12px}
+  .muted{color:#94a3b8;font-size:13px}
   .hidden{display:none}
-  /* Editor */
-  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
-  .editor{background:#0b1324;border:1px dashed #334155;border-radius:12px;padding:12px;min-height:360px}
-  .editor:focus{outline:2px solid var(--accent)}
-  /* File list */
-  .file{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--br);border-radius:10px;padding:8px 10px;background:#0b1324}
-  .file i{font-style:normal;color:var(--muted);font-size:12px}
-  /* Checklist */
-  .check-item{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--br);border-radius:10px;padding:10px;background:#0b1324}
-  .check-item.done{border-color:#12422a;background:#0c1f16}
-  .check-title{font-weight:600}
-  .strike{text-decoration:line-through;color:#9ca3af}
-  /* Link list */
-  .link-item{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--br);border-radius:10px;padding:10px;background:#0b1324}
-  a{color:var(--accent2);text-decoration:none}
-  a:hover{text-decoration:underline}
-  footer{max-width:1200px;margin:20px auto;padding:0 16px 40px;color:#93a3b8;font-size:12px}
-  /* Posts */
   .post{background:#0b1324;border:1px solid var(--br);border-radius:12px;padding:12px;display:grid;gap:8px}
   .post img{max-width:100%;border-radius:10px;border:1px solid #223047}
-  .badge{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid var(--br);background:#0b1324;color:#cbd5e1}
 </style>
 
-<!-- Marked for Markdown rendering -->
+<!-- Markdown renderer for post bodies -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-<!-- Supabase client (creates window.supabase) -->
+<!-- Supabase client (your project) -->
 <script type="module">
   import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
   const PROJECT_URL = "https://vczxjeoairhytagzpxkb.supabase.co";
-  const ANON_KEY    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZjenhqZW9haXJoeXRhZ3pweGtiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2MjYwMzIsImV4cCI6MjA3MTIwMjAzMn0.FRv4USQT8RcJAjstfLkLfWbwO13gPcFDB2R23hNxLkU";
+  const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZjenhqZW9haXJoeXRhZ3pweGtiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2MjYwMzIsImV4cCI6MjA3MTIwMjAzMn0.FRv4USQT8RcJAjstfLkLfWbwO13gPcFDB2R23hNxLkU";
   window.supabase = createClient(PROJECT_URL, ANON_KEY);
 </script>
 </head>
@@ -93,7 +74,6 @@
     </div>
 
     <div class="grid two">
-      <!-- Left column -->
       <div>
         <div class="card">
           <h3>Dashboard</h3>
@@ -110,20 +90,11 @@
         </div>
 
         <div class="card">
-          <h3>Files (local folder)</h3>
-          <div class="row">
-            <input type="file" id="filePicker" multiple class="btn">
-            <button class="btn" id="clearFiles">Clear All</button>
-          </div>
-          <div id="fileList" style="margin-top:10px;display:grid;gap:8px"></div>
-          <p class="muted">Files are stored locally (IndexedDB). To share publicly, upload to GitHub or Supabase Storage and link in a post.</p>
-        </div>
-
-        <div class="card">
           <h3>Posts</h3>
-          <p class="muted">Public feed from Supabase (anyone can view). Sign in to create a post.</p>
+          <p class="muted">Public feed from Supabase (anyone can view). Sign in to create a new post with an image.</p>
           <div id="postList" class="grid" style="gap:10px"></div>
 
+          <!-- New Post -->
           <div id="newPost" class="card hidden" style="margin-top:12px">
             <h3>New Post</h3>
             <input id="pTitle" type="text" placeholder="Title">
@@ -137,45 +108,37 @@
         </div>
       </div>
 
-      <!-- Right column -->
+      <!-- Notes -->
       <div>
         <div class="card">
           <h3>Notes</h3>
-          <p class="muted">Quick notes saved locally (private).</p>
+          <p class="muted">Private notes saved in your browser.</p>
           <textarea id="homeNotes" placeholder="Write your study notes..."></textarea>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- LEARNINGS (Supabase-backed) -->
+  <!-- LEARNINGS -->
   <section id="learnings" class="card hidden">
-    <div class="row" style="justify-content:space-between;align-items:center">
-      <h2>Learnings (Notebook) <span id="pubBadge" class="badge">Public</span></h2>
-      <div class="row" style="gap:8px">
-        <button class="btn" data-cmd="bold"><b>B</b></button>
-        <button class="btn" data-cmd="italic"><i>I</i></button>
-        <button class="btn" data-cmd="underline"><u>U</u></button>
-        <button class="btn" id="h1">H1</button>
-        <button class="btn" id="h2">H2</button>
-        <button class="btn" id="bul">• List</button>
-        <button class="btn" id="img">Insert Image</button>
-        <button class="btn primary" id="saveNote">Save</button>
-        <button class="btn" id="togglePublic" style="display:none">Make Public</button>
-        <span id="noteStatus" class="muted">Not signed in</span>
-        <label class="pill" style="cursor:pointer">
-          <input type="checkbox" id="autoSaveToggle" style="margin-right:6px"> Auto-save
-        </label>
-      </div>
+    <h2>Learnings (Notebook)</h2>
+    <div class="row" style="gap:6px;margin:8px 0">
+      <button class="btn" data-cmd="bold"><b>B</b></button>
+      <button class="btn" data-cmd="italic"><i>I</i></button>
+      <button class="btn" data-cmd="underline"><u>U</u></button>
+      <button class="btn" id="h1">H1</button>
+      <button class="btn" id="h2">H2</button>
+      <button class="btn" id="bul">• List</button>
+      <button class="btn" id="img">Insert Image</button>
+      <button class="btn primary" id="saveNote">Save</button>
+      <span class="muted" id="noteSaved"></span>
     </div>
-    <p class="muted">Public can read when visible; only you (signed in) can edit.</p>
     <div id="editor" class="editor" contenteditable="true"></div>
   </section>
 
   <!-- CHECKLIST -->
   <section id="checklist" class="card hidden">
     <h2>Checklist</h2>
-    <p class="muted">Track key topics to master for your research plan. Your progress is saved.</p>
     <div id="checkContainer" class="grid" style="gap:10px"></div>
     <div class="row" style="margin-top:10px">
       <input id="newItem" type="text" placeholder="Add a custom checklist item...">
@@ -187,7 +150,6 @@
   <!-- PROF. KATSURA -->
   <section id="prof" class="card hidden">
     <h2>Prof. Katsura — Lab & Papers</h2>
-    <p class="muted">Quick access to laboratory websites and selected publications relevant to your topic.</p>
     <div class="grid" id="profLinks" style="gap:8px"></div>
     <div class="card" style="margin-top:16px">
       <h3>Add Link</h3>
@@ -202,15 +164,14 @@
   <!-- MODELS -->
   <section id="models" class="card hidden">
     <h2>Models & Demos</h2>
-    <p class="muted">Register simulations, code repos, or small demos. Paste links to GitHub, Colab, or upload small assets.</p>
     <div id="modelList" class="grid" style="gap:8px"></div>
     <div class="card" style="margin-top:16px">
       <h3>Add Model</h3>
       <div class="grid two">
         <input id="modelTitle" type="text" placeholder="e.g., MCS Python Simulation">
-        <input id="modelURL" type="url" placeholder="https://github.com/... or local file link">
+        <input id="modelURL" type="url" placeholder="https://github.com/...">
       </div>
-      <textarea id="modelDesc" placeholder="Short description (what it shows, key metrics, how it ties to wave impedance)..."></textarea>
+      <textarea id="modelDesc" placeholder="Short description..."></textarea>
       <div class="row">
         <button class="btn" id="addModel">Add Model</button>
       </div>
@@ -220,15 +181,14 @@
   <!-- ARTICLES -->
   <section id="articles" class="card hidden">
     <h2>Articles & Papers (Related Work)</h2>
-    <p class="muted">Collect papers related to wave impedance control, bilateral teleoperation, disturbance observers, and haptics.</p>
     <div id="articleList" class="grid" style="gap:8px"></div>
     <div class="card" style="margin-top:16px">
       <h3>Add Article</h3>
       <div class="grid two">
         <input id="articleTitle" type="text" placeholder="Paper title">
-        <input id="articleURL" type="url" placeholder="https://doi.org/... or publisher link">
+        <input id="articleURL" type="url" placeholder="https://doi.org/...">
       </div>
-      <textarea id="articleNotes" placeholder="Why is this relevant to your plan? Key insight or quote (paraphrase)."></textarea>
+      <textarea id="articleNotes" placeholder="Why is this relevant?"></textarea>
       <div class="row">
         <button class="btn" id="addArticle">Add Article</button>
       </div>
@@ -237,11 +197,11 @@
 </main>
 
 <footer>
-  Local notes & files are private in your browser. Public posts & images come from Supabase. Learnings are public-read / owner-edit via Supabase.
+  Local notes are private in your browser. Public posts & images are served via Supabase so anyone can view them.
 </footer>
 
 <script>
-// ---------- Tabs ----------
+// Tabs
 const tabs = document.querySelectorAll('.tab');
 tabs.forEach(t=>t.addEventListener('click', ()=>{
   tabs.forEach(x=>x.classList.remove('active'));
@@ -253,105 +213,167 @@ tabs.forEach(t=>t.addEventListener('click', ()=>{
 const savedTab = localStorage.getItem('activeTab');
 if(savedTab){ tabs.forEach(t=>{ if(t.dataset.tab===savedTab){ t.click(); }}); }
 
-// ---------- Home: text fields ----------
+// Home fields + notes
 const homeTitle = document.getElementById('homeTitle');
 const homeSubtitle = document.getElementById('homeSubtitle');
 const homeAbout = document.getElementById('homeAbout');
 const homeSaved = document.getElementById('homeSaved');
 const homeNotes = document.getElementById('homeNotes');
-function loadHome(){
+(function loadHome(){
   homeTitle.value = localStorage.getItem('homeTitle') || "My Journey in Control Engineering";
   homeSubtitle.value = localStorage.getItem('homeSubtitle') || "Building toward wave impedance-based haptics for VR and teleoperation";
-  homeAbout.value = localStorage.getItem('homeAbout') || "This space collects my learnings, code, and experiments aligned with Prof. Katsura’s research themes.";
+  homeAbout.value = localStorage.getItem('homeAbout') || "";
   homeNotes.value = localStorage.getItem('homeNotes') || "";
-}
+})();
 document.getElementById('saveHome').onclick = ()=>{
   localStorage.setItem('homeTitle', homeTitle.value);
   localStorage.setItem('homeSubtitle', homeSubtitle.value);
   localStorage.setItem('homeAbout', homeAbout.value);
-  homeSaved.textContent = "Saved ✓";
-  setTimeout(()=>homeSaved.textContent="",1200);
+  homeSaved.textContent = "Saved ✓"; setTimeout(()=>homeSaved.textContent="",1200);
 };
 homeNotes.addEventListener('input', ()=> localStorage.setItem('homeNotes', homeNotes.value));
-loadHome();
 
-// ---------- IndexedDB Files ----------
-let db;
-const DB_NAME = 'portfolioFilesDB';
-const STORE = 'files';
-const fileList = document.getElementById('fileList');
-function initDB(){
-  return new Promise((resolve,reject)=>{
-    const req = indexedDB.open(DB_NAME,1);
-    req.onupgradeneeded = e=>{
-      const db = e.target.result;
-      if(!db.objectStoreNames.contains(STORE)){
-        db.createObjectStore(STORE,{keyPath:'id', autoIncrement:true});
-      }
-    };
-    req.onsuccess = e=>{ db=e.target.result; resolve(); };
-    req.onerror = e=>reject(e);
-  });
-}
-function addFiles(files){
-  const tx = db.transaction(STORE,'readwrite');
-  const store = tx.objectStore(STORE);
-  Array.from(files).forEach(f=>{
-    const reader = new FileReader();
-    reader.onload = ()=>{
-      store.add({name:f.name, type:f.type, size:f.size, data:reader.result, ts:Date.now()});
-      tx.oncomplete = renderFiles;
-    };
-    reader.readAsArrayBuffer(f);
-  });
-}
-function renderFiles(){
-  const tx = db.transaction(STORE,'readonly');
-  const store = tx.objectStore(STORE);
-  const req = store.getAll();
-  req.onsuccess = ()=>{
-    const items = req.result.sort((a,b)=>b.ts-a.ts);
-    fileList.innerHTML = "";
-    items.forEach(item=>{
-      const url = URL.createObjectURL(new Blob([item.data], {type:item.type||'application/octet-stream'}));
-      const div = document.createElement('div');
-      div.className = 'file';
-      const left = document.createElement('div');
-      left.innerHTML = `<b>${item.name}</b> <i>(${Math.round(item.size/1024)} KB)</i>`;
-      const right = document.createElement('div');
-      const a = document.createElement('a');
-      a.href = url; a.download = item.name; a.textContent = 'Download';
-      a.style.marginRight='8px';
-      const del = document.createElement('button');
-      del.className='btn danger'; del.textContent='Remove';
-      del.onclick = ()=>{
-        const tx2 = db.transaction(STORE,'readwrite');
-        tx2.objectStore(STORE).delete(item.id);
-        tx2.oncomplete = renderFiles;
-      };
-      right.appendChild(a); right.appendChild(del);
-      div.appendChild(left); div.appendChild(right);
-      fileList.appendChild(div);
-    });
-  };
-}
-document.getElementById('filePicker').addEventListener('change', e=> addFiles(e.target.files));
-document.getElementById('clearFiles').onclick = ()=>{
-  const tx = db.transaction(STORE,'readwrite');
-  tx.objectStore(STORE).clear();
-  tx.oncomplete = renderFiles;
+// Learnings editor
+const editor = document.getElementById('editor');
+const noteSaved = document.getElementById('noteSaved');
+(function loadNote(){
+  editor.innerHTML = localStorage.getItem('noteHTML') || "<h2>Week 1 — Foundations</h2><ul><li>Reviewed bilateral teleoperation and wave variables.</li><li>Built MCS demo & plotted RMSE.</li></ul>";
+})();
+document.querySelectorAll('[data-cmd]').forEach(btn=>btn.addEventListener('click', ()=>document.execCommand(btn.dataset.cmd,false,null)));
+document.getElementById('h1').onclick = ()=> document.execCommand('formatBlock', false, 'h1');
+document.getElementById('h2').onclick = ()=> document.execCommand('formatBlock', false, 'h2');
+document.getElementById('bul').onclick = ()=> document.execCommand('insertUnorderedList', false, null);
+document.getElementById('img').onclick = ()=>{
+  const i=document.createElement('input'); i.type='file'; i.accept='image/*';
+  i.onchange=e=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>document.execCommand('insertImage',false,r.result); r.readAsDataURL(f); };
+  i.click();
 };
-initDB().then(renderFiles);
+document.getElementById('saveNote').onclick = ()=>{ localStorage.setItem('noteHTML', editor.innerHTML); noteSaved.textContent="Saved ✓"; setTimeout(()=>noteSaved.textContent="",1200); };
+
+// Checklist
+const DEFAULT_ITEMS = [
+  "Review wave-variable theory for passivity over delays",
+  "Study bilateral teleoperation architectures (position-force, 4-ch)",
+  "Derive wave impedance mapping for 1-DOF mass-spring-damper",
+  "Understand infinite-order modeling / abstraction (Katsura lab)",
+  "Implement PD/LQR on a 2-link arm (sim)",
+  "Build Disturbance Observer (DOB) for motor/arm with friction)",
+  "Add modal-space separation for flexible dynamics",
+  "Implement time-delay blocks; analyze stability margins",
+  "Design passivity observer/passivity controller (PO/PC)",
+  "Implement energy tank / virtual energy shaping",
+  "Construct wave-variable wrapped teleop loop (master-slave)",
+  "Design haptic rendering of virtual wall (impedance control)",
+  "Simulate aerospace docking contact with force thresholds",
+  "Implement motion-copying system (MCS) [COMPLETED]"
+];
+const checkContainer = document.getElementById('checkContainer');
+function loadChecklist(){
+  let items = JSON.parse(localStorage.getItem('checklist')||'null');
+  if(!items) { items = DEFAULT_ITEMS.map(t=>({t,done:/motion-copying/i.test(t)})); localStorage.setItem('checklist', JSON.stringify(items)); }
+  renderChecklist(items);
+}
+function renderChecklist(items){
+  checkContainer.innerHTML = "";
+  items.forEach((it,idx)=>{
+    const div = document.createElement('div'); div.className='check-item'+(it.done?' done':'');
+    const cb = document.createElement('input'); cb.type='checkbox'; cb.checked=!!it.done;
+    const title = document.createElement('div'); title.className='check-title'; title.textContent=it.t;
+    if(it.done) title.classList.add('strike');
+    cb.onchange = ()=>{ it.done = cb.checked; const all = JSON.parse(localStorage.getItem('checklist')); all[idx]=it; localStorage.setItem('checklist', JSON.stringify(all)); renderChecklist(all); };
+    const del = document.createElement('button'); del.className='btn danger'; del.textContent='Remove';
+    del.onclick = ()=>{ const all = JSON.parse(localStorage.getItem('checklist')); all.splice(idx,1); localStorage.setItem('checklist', JSON.stringify(all)); renderChecklist(all); };
+    div.appendChild(cb); const inner = document.createElement('div'); inner.style.flex='1'; inner.appendChild(title); div.appendChild(inner); div.appendChild(del);
+    checkContainer.appendChild(div);
+  });
+}
+document.getElementById('addItem').onclick = ()=>{ const v=document.getElementById('newItem').value.trim(); if(!v) return; const all=JSON.parse(localStorage.getItem('checklist')); all.push({t:v,done:false}); localStorage.setItem('checklist', JSON.stringify(all)); document.getElementById('newItem').value=""; renderChecklist(all); };
+document.getElementById('resetChecklist').onclick = ()=>{ localStorage.removeItem('checklist'); loadChecklist(); };
+loadChecklist();
+
+// Prof links
+const profLinks = document.getElementById('profLinks');
+(function(){
+  const DEFAULT_LINKS = [
+    {title:"Katsura Laboratory (Keio) — Homepage", url:"https://www.katsura.sd.keio.ac.jp/"},
+    {title:"Keio Researcher Database — Seiichiro Katsura", url:"https://k-ris.keio.ac.jp/html/100011690_en.html"},
+    {title:"Research Introduction Video", url:"https://www.youtube.com/watch?v=Q3fUgDhkl0g"}
+  ];
+  const list = JSON.parse(localStorage.getItem('profLinks')||'null') || DEFAULT_LINKS;
+  localStorage.setItem('profLinks', JSON.stringify(list));
+  renderLinks(list);
+})();
+function renderLinks(list){
+  profLinks.innerHTML=""; list.forEach((ln,idx)=>{
+    const row = document.createElement('div'); row.className='link-item';
+    const a = document.createElement('a'); a.href=ln.url; a.target='_blank'; a.rel='noopener'; a.textContent = ln.title;
+    const del = document.createElement('button'); del.className='btn danger'; del.textContent='Remove';
+    del.onclick = ()=>{ const all = JSON.parse(localStorage.getItem('profLinks')); all.splice(idx,1); localStorage.setItem('profLinks', JSON.stringify(all)); renderLinks(all); };
+    row.appendChild(a); row.appendChild(del); profLinks.appendChild(row);
+  });
+}
+
+// Models
+const modelList = document.getElementById('modelList');
+(function(){
+  const list = JSON.parse(localStorage.getItem('models')||'null') || [
+    {title:"MCS Python Simulation", url:"#", desc:"Mouse → 2-link arm, PD + delay injection, RMSE & max error."},
+    {title:"Web MCS Demo", url:"#", desc:"HTML/JS demo: record → IK → PD replay → plots."}
+  ];
+  localStorage.setItem('models', JSON.stringify(list));
+  renderModels(list);
+})();
+function renderModels(list){
+  modelList.innerHTML=""; list.forEach((m,idx)=>{
+    const row = document.createElement('div'); row.className='link-item';
+    const left = document.createElement('div'); left.innerHTML = `<div style="font-weight:600">${m.title}</div><div class="muted">${m.desc}</div>`;
+    const right = document.createElement('div'); const a = document.createElement('a'); a.href=m.url; a.target="_blank"; a.textContent = "Open";
+    const del = document.createElement('button'); del.className='btn danger'; del.textContent='Remove'; del.style.marginLeft='8px';
+    del.onclick = ()=>{ const all = JSON.parse(localStorage.getItem('models')); all.splice(idx,1); localStorage.setItem('models', JSON.stringify(all)); renderModels(all); };
+    right.appendChild(a); right.appendChild(del); row.appendChild(left); row.appendChild(right); modelList.appendChild(row);
+  });
+}
+document.getElementById('addModel').onclick = ()=>{ const t=document.getElementById('modelTitle').value.trim(); const u=document.getElementById('modelURL').value.trim(); const d=document.getElementById('modelDesc').value.trim(); if(!t) return;
+  const all = JSON.parse(localStorage.getItem('models')); all.unshift({title:t, url:u||"#", desc:d||""}); localStorage.setItem('models', JSON.stringify(all));
+  document.getElementById('modelTitle').value=""; document.getElementById('modelURL').value=""; document.getElementById('modelDesc').value=""; renderModels(all);
+};
+
+// Articles
+const articleList = document.getElementById('articleList');
+(function(){
+  const list = JSON.parse(localStorage.getItem('articles')||'null') || [
+    {title:"Bilateral teleoperation with wave variables — notes", url:"#", notes:"Passivity guarantee via energy variables."},
+    {title:"Disturbance Observers in Mechatronics — overview", url:"#", notes:"DOB for friction/load disturbance rejection."}
+  ];
+  localStorage.setItem('articles', JSON.stringify(list));
+  renderArticles(list);
+})();
+function renderArticles(list){
+  articleList.innerHTML=""; list.forEach((a,idx)=>{
+    const row = document.createElement('div'); row.className='link-item';
+    const left = document.createElement('div'); left.innerHTML = `<div style="font-weight:600">${a.title}</div><div class="muted">${a.notes||""}</div>`;
+    const right = document.createElement('div'); const link=document.createElement('a'); link.href=a.url; link.target="_blank"; link.textContent="Open";
+    const del=document.createElement('button'); del.className='btn danger'; del.textContent='Remove'; del.style.marginLeft='8px';
+    del.onclick = ()=>{ const all = JSON.parse(localStorage.getItem('articles')); all.splice(idx,1); localStorage.setItem('articles', JSON.stringify(all)); renderArticles(all); };
+    right.appendChild(link); right.appendChild(del); row.appendChild(left); row.appendChild(right); articleList.appendChild(row);
+  });
+}
+document.getElementById('addArticle').onclick = ()=>{ const t=document.getElementById('articleTitle').value.trim(); const u=document.getElementById('articleURL').value.trim(); const n=document.getElementById('articleNotes').value.trim(); if(!t || !u) return;
+  const all=JSON.parse(localStorage.getItem('articles')); all.unshift({title:t, url:u, notes:n}); localStorage.setItem('articles', JSON.stringify(all));
+  document.getElementById('articleTitle').value=""; document.getElementById('articleURL').value=""; document.getElementById('articleNotes').value=""; renderArticles(all);
+};
 </script>
 
-<!-- Supabase: Auth + Posts + Learnings + Storage -->
+<!-- Supabase: Auth + Posts + Image Upload (BUCKET: images) -->
 <script type="module">
-  // ----------- Auth (GitHub) -----------
+  const BUCKET_NAME = "images";
   const loginBtn  = document.getElementById('login');
   const logoutBtn = document.getElementById('logout');
   const newPostEl = document.getElementById('newPost');
+  const postList  = document.getElementById('postList');
   const RETURN_TO = "https://kav33sh.github.io/Kaveesh-Research-Portal/";
 
+  // Auth state
   supabase.auth.onAuthStateChange((_event, session) => {
     const loggedIn = !!session;
     loginBtn.style.display  = loggedIn ? 'none' : 'inline-block';
@@ -371,16 +393,17 @@ initDB().then(renderFiles);
     location.href = RETURN_TO;
   };
 
-  // ----------- Posts (DB) -----------
-  const postList = document.getElementById('postList');
+  // Load posts
   async function loadPosts(){
     const { data, error } = await supabase
       .from('posts')
       .select('*')
       .order('created_at', { ascending: false });
+
     if(error){
       postList.innerHTML = "<div class='muted'>Failed to load posts.</div>";
-      console.error(error); return;
+      console.error(error);
+      return;
     }
     postList.innerHTML = "";
     for(const p of data){
@@ -396,40 +419,57 @@ initDB().then(renderFiles);
           <div class="muted" style="font-size:12px">${when}</div>
         </div>
         ${imgTag}
-        <div class="post-body">${bodyHTML}</div>`;
+        <div class="post-body">${bodyHTML}</div>
+      `;
       postList.appendChild(card);
     }
   }
-  loadPosts();
 
-  // ----------- Image Upload (Storage) -----------
-  const BUCKET_NAME = "images"; // ensure this bucket exists & has policies
+  // Upload image to 'images' bucket
   async function uploadImage(file){
     if(!file) return null;
     const path = `posts/${Date.now()}_${file.name}`;
-    const { error } = await supabase.storage.from(BUCKET_NAME).upload(path, file, { upsert:false });
-    if(error){ console.error("Upload failed:", error.message); return null; }
+    const { data, error } = await supabase
+      .storage
+      .from(BUCKET_NAME)
+      .upload(path, file, {
+        upsert: false,
+        cacheControl: "3600",
+        contentType: file.type || "application/octet-stream"
+      });
+    if(error){
+      console.error("Storage upload error:", error);
+      const msg = document.getElementById('pubMsg');
+      if (msg) msg.textContent = `Upload error: ${error.message || JSON.stringify(error)}`;
+      return null;
+    }
     const { data: pub } = supabase.storage.from(BUCKET_NAME).getPublicUrl(path);
     return pub.publicUrl;
   }
+
+  // Publish new post
   document.getElementById('publish').onclick = async ()=>{
     const title = document.getElementById('pTitle').value.trim();
     const body  = document.getElementById('pBody').value.trim();
     const file  = document.getElementById('pImage').files[0];
     const msg   = document.getElementById('pubMsg');
+
     if(!title || !body){ msg.textContent = "Title and content required."; return; }
+
     const { data: { user } } = await supabase.auth.getUser();
     if(!user){ msg.textContent = "Please sign in first."; return; }
 
     let image_url = null;
     if(file){
       image_url = await uploadImage(file);
-      if(!image_url){ msg.textContent = "Image upload failed."; return; }
+      if(!image_url){ return; } // error message already shown
     }
+
     const { error } = await supabase.from('posts').insert({
       author: user.id, title, body_md: body, image_url
     });
-    if(error){ msg.textContent = "Publish failed."; console.error(error); return; }
+    if(error){ msg.textContent = `Publish failed: ${error.message}`; console.error(error); return; }
+
     msg.textContent = "Published ✓";
     document.getElementById('pTitle').value = "";
     document.getElementById('pBody').value  = "";
@@ -437,159 +477,7 @@ initDB().then(renderFiles);
     loadPosts();
   };
 
-  // ----------- Learnings (Public read / Owner edit) -----------
-  const editor       = document.getElementById('editor');
-  const saveBtn      = document.getElementById('saveNote');
-  const noteStatus   = document.getElementById('noteStatus');
-  const autoSaveTgl  = document.getElementById('autoSaveToggle');
-  const toggleBtn    = document.getElementById('togglePublic');
-  const pubBadge     = document.getElementById('pubBadge');
-
-  // formatting
-  document.querySelectorAll('[data-cmd]').forEach(btn=>{
-    btn.addEventListener('click', ()=> document.execCommand(btn.dataset.cmd,false,null));
-  });
-  document.getElementById('h1').onclick = ()=> document.execCommand('formatBlock', false, 'h1');
-  document.getElementById('h2').onclick = ()=> document.execCommand('formatBlock', false, 'h2');
-  document.getElementById('bul').onclick = ()=> document.execCommand('insertUnorderedList', false, null);
-  document.getElementById('img').onclick = ()=>{
-    const input = document.createElement('input'); input.type='file'; input.accept='image/*';
-    input.onchange = e=>{
-      const f = e.target.files[0]; if(!f) return;
-      const r = new FileReader();
-      r.onload = ()=> document.execCommand('insertImage', false, r.result);
-      r.readAsDataURL(f);
-    };
-    input.click();
-  };
-
-  function defaultWelcomeHTML(){
-    return `<h2>Learnings</h2>
-    <p>This notebook is <b>publicly readable</b> when marked public. Sign in to edit and auto-save.</p>
-    <ul>
-      <li>Summaries of Katsura Lab papers</li>
-      <li>Experiments toward wave-impedance haptics</li>
-      <li>Images are embedded inline</li>
-    </ul>`;
-  }
-
-  function debounce(fn, ms=600){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; }
-  const debouncedSave = debounce(async ()=>{ if(autoSaveTgl.checked){ await saveNote(); } }, 800);
-
-  async function loadPublicNote(){
-    noteStatus.textContent = "Loading public note…";
-    const { data, error } = await supabase
-      .from('notes')
-      .select('content, updated_at')
-      .eq('is_public', true)
-      .order('updated_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if(error){
-      console.error("Public note load error:", error);
-      editor.innerHTML = defaultWelcomeHTML();
-      noteStatus.textContent = "Public note load failed";
-      pubBadge.textContent = "Public";
-      editor.setAttribute('contenteditable','false');
-      saveBtn.disabled = true; autoSaveTgl.disabled = true; toggleBtn.style.display='none';
-      return;
-    }
-    const html = data?.content || defaultWelcomeHTML();
-    editor.innerHTML = html;
-    noteStatus.textContent = "Public (read-only)";
-    pubBadge.textContent = "Public";
-    editor.setAttribute('contenteditable','false');
-    saveBtn.disabled = true; autoSaveTgl.disabled = true; toggleBtn.style.display='none';
-  }
-
-  async function loadOwnNote(userId){
-    noteStatus.textContent = "Loading your note…";
-    const { data, error } = await supabase
-      .from('notes')
-      .select('content, is_public')
-      .eq('user_id', userId)
-      .maybeSingle();
-    if(error){ console.error("Own note load error:", error); noteStatus.textContent = "Load failed"; return; }
-    const html = data?.content || defaultWelcomeHTML();
-    editor.innerHTML = html;
-    editor.setAttribute('contenteditable','true');
-    saveBtn.disabled = false; autoSaveTgl.disabled = false;
-    toggleBtn.style.display='inline-block';
-    const isPublic = !!data?.is_public;
-    pubBadge.textContent = isPublic ? "Public" : "Private";
-    toggleBtn.textContent = isPublic ? "Make Private" : "Make Public";
-    noteStatus.textContent = isPublic ? "Loaded (public ✓)" : "Loaded (private)";
-  }
-
-  async function saveNote(){
-  const { data: { user }, error: userErr } = await supabase.auth.getUser();
-  if (userErr) {
-    console.error("Auth getUser error:", userErr);
-    noteStatus.textContent = "Save failed (auth)";
-    return;
-  }
-  if(!user){ noteStatus.textContent = "Sign in to save"; return; }
-
-  noteStatus.textContent = "Saving…";
-  const html = editor.innerHTML;
-
-  const { error } = await supabase
-    .from('notes')
-    .upsert(
-      { user_id: user.id, content: html },   // include user_id to satisfy RLS
-      { onConflict: 'user_id' }              // use your unique constraint
-    );
-
-  if (error) {
-    console.error("Save note DB error:", error);
-    noteStatus.textContent = "Save failed";
-  } else {
-    noteStatus.textContent = "Saved ✓";
-  }
-}
-
-  async function refreshToggleUI(userId){
-    const { data, error } = await supabase
-      .from('notes')
-      .select('is_public')
-      .eq('user_id', userId)
-      .maybeSingle();
-    const isPublic = !!data?.is_public;
-    pubBadge.textContent = isPublic ? "Public" : "Private";
-    toggleBtn.textContent = isPublic ? "Make Private" : "Make Public";
-    noteStatus.textContent = isPublic ? "Loaded (public ✓)" : "Loaded (private)";
-  }
-
-  toggleBtn.addEventListener('click', async ()=>{
-    const { data: { user } } = await supabase.auth.getUser();
-    if(!user){ alert("Sign in first."); return; }
-    // Ensure a row exists, then flip flag
-    await supabase.from('notes').upsert({ user_id: user.id, content: editor.innerHTML }).eq('user_id', user.id);
-    const { data, error } = await supabase
-      .from('notes').select('is_public').eq('user_id', user.id).maybeSingle();
-    const next = !(data?.is_public);
-    const { error: updErr } = await supabase.from('notes').update({ is_public: next }).eq('user_id', user.id);
-    if(updErr){ console.error(updErr); alert("Failed to toggle"); return; }
-    await refreshToggleUI(user.id);
-  });
-
-  editor.addEventListener('input', debouncedSave);
-  document.getElementById('saveNote').addEventListener('click', saveNote);
-  autoSaveTgl.checked = localStorage.getItem('autoSaveLearnings') === '1';
-  autoSaveTgl.onchange = ()=> localStorage.setItem('autoSaveLearnings', autoSaveTgl.checked?'1':'0');
-
-  // Initial load depending on auth
-  (async ()=>{
-    const { data: { user } } = await supabase.auth.getUser();
-    if(user){ await loadOwnNote(user.id); }
-    else { await loadPublicNote(); }
-  })();
-
-  // React to future auth changes
-  supabase.auth.onAuthStateChange(async (_evt, session)=>{
-    if(session?.user){ await loadOwnNote(session.user.id); }
-    else { await loadPublicNote(); }
-  });
+  loadPosts();
 </script>
 </body>
 </html>
