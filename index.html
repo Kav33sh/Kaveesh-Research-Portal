@@ -29,12 +29,14 @@
   textarea{min-height:100px}
   .grid{display:grid;gap:12px}
   .two{grid-template-columns:1.1fr .9fr}
+  .three{grid-template-columns:repeat(3,1fr)}
   .pill{display:inline-flex;gap:6px;align-items:center;background:#0b1324;border:1px solid var(--br);border-radius:999px;padding:6px 10px;color:var(--muted);font-size:12px}
   .muted{color:var(--muted);font-size:13px}
   .hidden{display:none}
   /* Editor */
   .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
   .editor{background:#0b1324;border:1px dashed #334155;border-radius:12px;padding:12px;min-height:360px}
+  .editor[contenteditable="false"]{opacity:.9}
   .editor:focus{outline:2px solid var(--accent)}
   /* File list */
   .file{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--br);border-radius:10px;padding:8px 10px;background:#0b1324}
@@ -48,14 +50,22 @@
   .link-item{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--br);border-radius:10px;padding:10px;background:#0b1324}
   a{color:var(--accent2);text-decoration:none}
   a:hover{text-decoration:underline}
+  footer{max-width:1200px;margin:20px auto;padding:0 16px 40px;color:#93a3b8;font-size:12px}
   /* Posts */
   .post{background:#0b1324;border:1px solid var(--br);border-radius:12px;padding:12px;display:grid;gap:8px}
   .post img{max-width:100%;border-radius:10px;border:1px solid #223047}
-  footer{max-width:1200px;margin:20px auto;padding:0 16px 40px;color:#93a3b8;font-size:12px}
 </style>
 
-<!-- Markdown renderer (for posts body if you add later) -->
+<!-- Markdown renderer for post bodies -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<!-- Supabase client (global) -->
+<script type="module">
+  import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+  const PROJECT_URL = "https://vczxjeoairhytagzpxkb.supabase.co";
+  const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZjenhqZW9haXJoeXRhZ3pweGtiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2MjYwMzIsImV4cCI6MjA3MTIwMjAzMn0.FRv4USQT8RcJAjstfLkLfWbwO13gPcFDB2R23hNxLkU";
+  window.supabase = createClient(PROJECT_URL, ANON_KEY);
+</script>
 </head>
 <body>
 <header>
@@ -75,8 +85,16 @@
 <main>
   <!-- HOME -->
   <section id="home" class="card">
-    <h2>Home</h2>
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <h2>Home</h2>
+      <div id="authBar" class="row">
+        <button class="btn" id="login">Sign in with GitHub</button>
+        <button class="btn" id="logout" style="display:none">Logout</button>
+      </div>
+    </div>
+
     <div class="grid two">
+      <!-- LEFT: Dashboard + Files + Posts -->
       <div>
         <div class="card">
           <h3>Dashboard</h3>
@@ -99,24 +117,48 @@
             <button class="btn" id="clearFiles">Clear All</button>
           </div>
           <div id="fileList" style="margin-top:10px;display:grid;gap:8px"></div>
-          <p class="muted">Files are stored locally in your browser (IndexedDB). To share publicly, upload to your repo and link them in your posts.</p>
+          <p class="muted">Files are stored locally in your browser (IndexedDB). To share publicly, upload to your repo or Supabase Storage and link in a post.</p>
+        </div>
+
+        <div class="card">
+          <h3>Posts</h3>
+          <p class="muted">Public feed from Supabase (anyone can view). Sign in to create a new post.</p>
+          <div id="postList" class="grid" style="gap:10px"></div>
+
+          <div id="newPost" class="card hidden" style="margin-top:12px">
+            <h3>New Post</h3>
+            <input id="pTitle" type="text" placeholder="Title">
+            <textarea id="pBody" placeholder="Markdown content..."></textarea>
+            <input id="pImage" type="file" accept="image/*">
+            <div class="row">
+              <button class="btn primary" id="publish">Publish</button>
+            </div>
+            <div class="muted" id="pubMsg"></div>
+          </div>
         </div>
       </div>
 
+      <!-- RIGHT: Notes (private, local) -->
       <div>
         <div class="card">
           <h3>Notes</h3>
-          <p class="muted">Private notes (saved in your browser).</p>
+          <p class="muted">Write your personal notes here. They auto-save in your browser (private).</p>
           <textarea id="homeNotes" placeholder="Write your study notes..."></textarea>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- LEARNINGS -->
+  <!-- LEARNINGS (Supabase-backed) -->
   <section id="learnings" class="card hidden">
-    <h2>Learnings (Notebook)</h2>
-    <p class="muted">Rich-text notes (local). Use the toolbar; content auto-saves if you enable it.</p>
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <h2>Learnings (Notebook)</h2>
+      <div class="row">
+        <button class="btn" id="togglePublic">Make Public/Private</button>
+        <span id="pubState" class="muted"></span>
+      </div>
+    </div>
+    <p class="muted">This notebook is <b>publicly readable</b> when you set it Public. Only the owner (signed-in) can edit & save.</p>
 
     <div class="toolbar">
       <button class="btn" data-cmd="bold"><b>B</b></button>
@@ -127,10 +169,10 @@
       <button class="btn" id="bul">• List</button>
       <button class="btn" id="img">Insert Image</button>
       <button class="btn primary" id="saveNote">Save</button>
-      <label class="pill" style="margin-left:auto;cursor:pointer">
+      <span class="muted" id="noteStatus" style="margin-left:auto">Not signed in</span>
+      <label class="pill" style="cursor:pointer">
         <input type="checkbox" id="autoSaveToggle" style="margin-right:6px"> Auto-save
       </label>
-      <span class="muted" id="noteSaved"></span>
     </div>
     <div id="editor" class="editor" contenteditable="true"></div>
   </section>
@@ -138,7 +180,7 @@
   <!-- CHECKLIST -->
   <section id="checklist" class="card hidden">
     <h2>Checklist</h2>
-    <p class="muted">Track key topics to master for your research plan. Your progress is saved in localStorage.</p>
+    <p class="muted">Track key topics to master for your research plan. Your progress is saved.</p>
     <div id="checkContainer" class="grid" style="gap:10px"></div>
     <div class="row" style="margin-top:10px">
       <input id="newItem" type="text" placeholder="Add a custom checklist item...">
@@ -150,7 +192,7 @@
   <!-- PROF. KATSURA -->
   <section id="prof" class="card hidden">
     <h2>Prof. Katsura — Lab & Papers</h2>
-    <p class="muted">Quick access to laboratory websites and selected publications relevant to your topic (editable).</p>
+    <p class="muted">Quick access to laboratory websites and selected publications relevant to your topic.</p>
     <div class="grid" id="profLinks" style="gap:8px"></div>
     <div class="card" style="margin-top:16px">
       <h3>Add Link</h3>
@@ -165,13 +207,13 @@
   <!-- MODELS -->
   <section id="models" class="card hidden">
     <h2>Models & Demos</h2>
-    <p class="muted">Register simulations, code repos, or small demos.</p>
+    <p class="muted">Register simulations, code repos, or small demos. Paste links to GitHub, Colab, or upload small assets.</p>
     <div id="modelList" class="grid" style="gap:8px"></div>
     <div class="card" style="margin-top:16px">
       <h3>Add Model</h3>
       <div class="grid two">
         <input id="modelTitle" type="text" placeholder="e.g., MCS Python Simulation">
-        <input id="modelURL" type="url" placeholder="https://github.com/... or demo URL">
+        <input id="modelURL" type="url" placeholder="https://github.com/... or local file link">
       </div>
       <textarea id="modelDesc" placeholder="Short description (what it shows, key metrics, how it ties to wave impedance)..."></textarea>
       <div class="row">
@@ -183,7 +225,7 @@
   <!-- ARTICLES -->
   <section id="articles" class="card hidden">
     <h2>Articles & Papers (Related Work)</h2>
-    <p class="muted">Collect papers related to wave impedance control, bilateral teleoperation, disturbance observers, and haptics (editable).</p>
+    <p class="muted">Collect papers related to wave impedance control, bilateral teleoperation, disturbance observers, and haptics.</p>
     <div id="articleList" class="grid" style="gap:8px"></div>
     <div class="card" style="margin-top:16px">
       <h3>Add Article</h3>
@@ -200,9 +242,10 @@
 </main>
 
 <footer>
-  Local notes & files are private in your browser. Lists of papers, models, and checklist are also saved locally.
+  Local notes & files are private in your browser. Public posts & images are loaded from Supabase so anyone can view them.
 </footer>
 
+<!-- App logic -->
 <script>
 /* ---------- Tabs ---------- */
 const tabs = document.querySelectorAll('.tab');
@@ -289,66 +332,207 @@ function renderFiles(){
 document.getElementById('filePicker').addEventListener('change',e=>addFiles(e.target.files));
 document.getElementById('clearFiles').onclick=()=>{ const tx=db.transaction(STORE,'readwrite'); tx.objectStore(STORE).clear(); tx.oncomplete=renderFiles; };
 initDB().then(renderFiles);
+</script>
 
-/* ---------- Learnings (local, rich-text) ---------- */
-const editor = document.getElementById('editor');
-const noteSaved = document.getElementById('noteSaved');
-const saveNoteBtn = document.getElementById('saveNote');
-const autoSave = document.getElementById('autoSaveToggle');
+<!-- Supabase: Posts + Auth + Storage + Learnings -->
+<script type="module">
+  const BUCKET_NAME = "images";
+  const RETURN_TO = "https://kav33sh.github.io/Kaveesh-Research-Portal/";
 
-function defaultLearningsHTML(){
-  return `
-  <h2>From Control Engineering Texts</h2>
-  <ul>
-    <li><b>Feedback and Stability:</b> Classical (Bode/Nyquist) and state-space methods emphasize stability under uncertainty. This maps to robust haptic teleoperation, where passivity must hold even with delays.</li>
-    <li><b>Passivity &amp; Impedance Control:</b> Unknown environments can destabilize the loop. Impedance/wave-based control enforces energy consistency, motivating wave variables in haptics.</li>
-    <li><b>Adaptive &amp; Robust Control:</b> I studied MRAC and H∞ control as tools to handle time-varying dynamics and variable-delay networks for teleoperation.</li>
-  </ul>
-  <h2>From Your Research Papers (Takeaways)</h2>
-  <ul>
-    <li><b>Wave Variable Transformation:</b> Transmitting effort/flow as wave variables keeps the channel passive, mitigating delay-induced instability. I will adopt this in my plan.</li>
-    <li><b>Impedance Matching &amp; Stability:</b> Wave impedance \(Z_w\) sets the transparency–stability tradeoff. I plan to study how \(Z_w\) choices affect haptic realism vs. robustness.</li>
-    <li><b>Energy-based Perspective:</b> Modeling the human–robot–environment loop as energy exchange aligns with passivity control principles to guarantee safe feedback.</li>
-    <li><b>Application Insight:</b> Your teleoperation/haptics studies show rigorous theory → working systems. My navigation/control background supports that same bridge.</li>
-  </ul>
-  <h3>Overall</h3>
-  <ul>
-    <li>Why wave-variable control is necessary (delay-induced instability).</li>
-    <li>How impedance parameters directly affect performance.</li>
-    <li>How passivity-based approaches guarantee stability in human-in-the-loop systems.</li>
-  </ul>`;
-}
+  /* ---------- Auth UI ---------- */
+  const loginBtn  = document.getElementById('login');
+  const logoutBtn = document.getElementById('logout');
+  const newPostEl = document.getElementById('newPost');
 
-function loadNote(){
-  editor.innerHTML = localStorage.getItem('noteHTML') || defaultLearningsHTML();
-}
-document.querySelectorAll('.toolbar [data-cmd]').forEach(btn=>{
-  btn.addEventListener('click', ()=> document.execCommand(btn.dataset.cmd, false, null));
-});
-document.getElementById('h1').onclick = ()=> document.execCommand('formatBlock', false, 'h1');
-document.getElementById('h2').onclick = ()=> document.execCommand('formatBlock', false, 'h2');
-document.getElementById('bul').onclick = ()=> document.execCommand('insertUnorderedList', false, null);
-document.getElementById('img').onclick = ()=>{
-  const input = document.createElement('input'); input.type='file'; input.accept='image/*';
-  input.onchange = e=>{
-    const f = e.target.files[0]; if(!f) return;
-    const r = new FileReader();
-    r.onload = ()=> document.execCommand('insertImage', false, r.result);
-    r.readAsDataURL(f);
+  supabase.auth.onAuthStateChange((_evt, session)=>{
+    const loggedIn = !!session;
+    loginBtn.style.display  = loggedIn ? 'none' : 'inline-block';
+    logoutBtn.style.display = loggedIn ? 'inline-block' : 'none';
+    newPostEl.classList.toggle('hidden', !loggedIn);
+  });
+
+  loginBtn.onclick = async ()=>{
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider:'github',
+      options:{ redirectTo: RETURN_TO }
+    });
+    if(error){ alert(`Login error: ${error.message}`); console.error(error); }
   };
-  input.click();
-};
-saveNoteBtn.onclick = ()=>{
-  localStorage.setItem('noteHTML', editor.innerHTML);
-  noteSaved.textContent = "Saved ✓"; setTimeout(()=>noteSaved.textContent="",1200);
-};
-function debounce(fn,ms=700){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; }
-const debounced = debounce(()=>{ if(autoSave.checked){ localStorage.setItem('noteHTML', editor.innerHTML); noteSaved.textContent="Auto-saved"; setTimeout(()=>noteSaved.textContent="",800);} },900);
-editor.addEventListener('input', debounced);
-autoSave.checked = localStorage.getItem('autoSaveLearnings')==='1';
-autoSave.onchange = ()=> localStorage.setItem('autoSaveLearnings', autoSave.checked?'1':'0');
-loadNote();
+  logoutBtn.onclick = async ()=>{
+    await supabase.auth.signOut();
+    location.href = RETURN_TO;
+  };
 
+  /* ---------- Posts (public) ---------- */
+  const postList = document.getElementById('postList');
+  async function loadPosts(){
+    const { data, error } = await supabase.from('posts').select('*').order('created_at',{ascending:false});
+    if(error){ postList.innerHTML="<div class='muted'>Failed to load posts.</div>"; console.error(error); return; }
+    postList.innerHTML="";
+    (data||[]).forEach(p=>{
+      const card=document.createElement('div'); card.className='post';
+      const when=new Date(p.created_at).toLocaleString();
+      const imgTag=p.image_url?`<img src="${p.image_url}" alt="post image">`:"";
+      const bodyHTML = window.marked ? marked.parse(p.body_md||"") : (p.body_md||"");
+      card.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-weight:700">${p.title||"Post"}</div>
+          <div class="muted" style="font-size:12px">${when}</div>
+        </div>
+        ${imgTag}
+        <div class="post-body">${bodyHTML}</div>`;
+      postList.appendChild(card);
+    });
+  }
+  async function uploadImage(file){
+    if(!file) return null;
+    const path = `posts/${Date.now()}_${file.name}`;
+    const { error: upErr } = await supabase.storage.from(BUCKET_NAME).upload(path, file, { upsert:false });
+    if(upErr){ console.error(upErr); return null; }
+    const { data: pub } = supabase.storage.from(BUCKET_NAME).getPublicUrl(path);
+    return pub.publicUrl;
+  }
+  document.getElementById('publish').onclick = async ()=>{
+    const title = document.getElementById('pTitle').value.trim();
+    const body  = document.getElementById('pBody').value.trim();
+    const file  = document.getElementById('pImage').files[0];
+    const msg   = document.getElementById('pubMsg');
+    if(!title || !body){ msg.textContent="Title and content required."; return; }
+    const { data:{ user } } = await supabase.auth.getUser();
+    if(!user){ msg.textContent="Please sign in first."; return; }
+
+    let image_url=null;
+    if(file){
+      image_url = await uploadImage(file);
+      if(!image_url){ msg.textContent="Image upload failed."; return; }
+    }
+    const { error } = await supabase.from('posts').insert({ author:user.id, title, body_md:body, image_url });
+    if(error){ msg.textContent="Publish failed."; console.error(error); return; }
+    msg.textContent="Published ✓";
+    document.getElementById('pTitle').value="";
+    document.getElementById('pBody').value="";
+    document.getElementById('pImage').value="";
+    loadPosts();
+  };
+  loadPosts();
+
+  /* ---------- Learnings (public read / owner edit) ---------- */
+  const editor      = document.getElementById('editor');
+  const saveBtn     = document.getElementById('saveNote');
+  const noteStatus  = document.getElementById('noteStatus');
+  const autoSaveTgl = document.getElementById('autoSaveToggle');
+  const toggleBtn   = document.getElementById('togglePublic');
+  const pubState    = document.getElementById('pubState');
+
+  // formatting
+  document.querySelectorAll('[data-cmd]').forEach(btn=>{
+    btn.addEventListener('click', ()=> document.execCommand(btn.dataset.cmd,false,null));
+  });
+  document.getElementById('h1').onclick = ()=> document.execCommand('formatBlock', false, 'h1');
+  document.getElementById('h2').onclick = ()=> document.execCommand('formatBlock', false, 'h2');
+  document.getElementById('bul').onclick = ()=> document.execCommand('insertUnorderedList', false, null);
+  document.getElementById('img').onclick = ()=>{
+    const input=document.createElement('input'); input.type='file'; input.accept='image/*';
+    input.onchange=e=>{
+      const f=e.target.files[0]; if(!f) return;
+      const r=new FileReader(); r.onload=()=>document.execCommand('insertImage', false, r.result); r.readAsDataURL(f);
+    };
+    input.click();
+  };
+
+  function defaultWelcomeHTML(){
+    return `<h2>Learnings</h2>
+    <p>This notebook is <b>publicly readable</b> when marked Public. Sign in to edit and auto-save.</p>
+    <ul>
+      <li>Summaries of Katsura Lab papers.</li>
+      <li>Experiments for wave-impedance haptics.</li>
+      <li>Paste images; they’re embedded inline.</li>
+    </ul>`;
+  }
+
+  async function loadPublicNote(){
+    noteStatus.textContent="Loading public note…";
+    const { data, error } = await supabase
+      .from('notes')
+      .select('content, updated_at')
+      .eq('is_public', true)
+      .order('updated_at', { ascending:false })
+      .limit(1)
+      .maybeSingle();
+    const html = (!error && data?.content) ? data.content : defaultWelcomeHTML();
+    editor.innerHTML = html;
+    editor.setAttribute('contenteditable','false');
+    saveBtn.disabled = true; autoSaveTgl.disabled = true;
+    noteStatus.textContent="Public (read-only)";
+    pubState.textContent = "Public";
+  }
+
+  async function refreshPubState(userId){
+    const { data, error } = await supabase
+      .from('notes')
+      .select('is_public')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if(!error && data){ pubState.textContent = data.is_public ? "Public" : "Private"; }
+  }
+
+  async function loadOwnNote(userId){
+    noteStatus.textContent="Loading your note…";
+    const { data, error } = await supabase
+      .from('notes')
+      .select('content, is_public')
+      .eq('user_id', userId)
+      .maybeSingle();
+    const html = (!error && data?.content) ? data.content : defaultWelcomeHTML();
+    editor.innerHTML = html;
+    editor.setAttribute('contenteditable','true');
+    saveBtn.disabled = false; autoSaveTgl.disabled = false;
+    noteStatus.textContent = data ? (data.is_public ? "Loaded (public ✓)" : "Loaded (private)") : "New note";
+    await refreshPubState(userId);
+  }
+
+  async function saveNote(){
+    const { data:{ user }, error:userErr } = await supabase.auth.getUser();
+    if(userErr || !user){ noteStatus.textContent="Sign in to save"; return; }
+    noteStatus.textContent="Saving…";
+    const html = editor.innerHTML;
+    const { error } = await supabase
+      .from('notes')
+      .upsert({ user_id:user.id, content:html }, { onConflict:'user_id' });
+    if(error){ console.error("Save note DB error:", error); noteStatus.textContent="Save failed"; }
+    else { noteStatus.textContent="Saved ✓"; }
+  }
+
+  // debounce autosave
+  function debounce(fn, ms=700){ let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args),ms); }; }
+  const debouncedSave = debounce(()=>{ if(autoSaveTgl.checked){ saveNote(); }}, 900);
+  editor.addEventListener('input', debouncedSave);
+  saveBtn.addEventListener('click', saveNote);
+  autoSaveTgl.checked = localStorage.getItem('autoSaveLearnings')==='1';
+  autoSaveTgl.onchange = ()=> localStorage.setItem('autoSaveLearnings', autoSaveTgl.checked?'1':'0');
+
+  // toggle public/private
+  toggleBtn.onclick = async ()=>{
+    const { data:{ user } } = await supabase.auth.getUser();
+    if(!user){ alert("Sign in first."); return; }
+    await supabase.from('notes').upsert({ user_id:user.id, content: editor.innerHTML }, { onConflict:'user_id' });
+    const { data, error } = await supabase.from('notes').select('is_public').eq('user_id', user.id).maybeSingle();
+    const next = !(data?.is_public);
+    const { error: updErr } = await supabase.from('notes').update({ is_public: next }).eq('user_id', user.id);
+    if(updErr){ alert("Failed to toggle"); console.error(updErr); return; }
+    pubState.textContent = next ? "Public" : "Private";
+    alert(`Learnings is now ${next ? "Public (readable by anyone)" : "Private (only you)"}.`);
+  };
+
+  // initial auth-based load
+  (async ()=>{
+    const { data:{ user } } = await supabase.auth.getUser();
+    if(user){ await loadOwnNote(user.id); }
+    else { await loadPublicNote(); }
+  })();
+</script>
+
+<script>
 /* ---------- Checklist ---------- */
 const DEFAULT_ITEMS = [
   "Review wave-variable theory for passivity over delays",
@@ -383,61 +567,52 @@ const checkContainer = document.getElementById('checkContainer');
 function loadChecklist(){
   let items = JSON.parse(localStorage.getItem('checklist')||'null');
   if(!items){
-    items = DEFAULT_ITEMS.map(t=>({t,done: t.includes('[COMPLETED]') || t.toLowerCase().includes('motion-copying')}));
+    items = DEFAULT_ITEMS.map(t=>({t,done:t.includes('[COMPLETED]') || t.toLowerCase().includes('motion-copying')}));
     localStorage.setItem('checklist', JSON.stringify(items));
   }
   renderChecklist(items);
 }
 function renderChecklist(items){
-  checkContainer.innerHTML = "";
+  checkContainer.innerHTML="";
   items.forEach((it,idx)=>{
-    const div = document.createElement('div'); div.className='check-item'+(it.done?' done':'');
-    const cb = document.createElement('input'); cb.type='checkbox'; cb.checked=!!it.done;
-    const title = document.createElement('div'); title.className='check-title'; title.textContent=it.t;
+    const div=document.createElement('div'); div.className='check-item'+(it.done?' done':'');
+    const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=!!it.done;
+    const title=document.createElement('div'); title.className='check-title'; title.textContent=it.t;
     if(it.done) title.classList.add('strike');
-    cb.onchange = ()=>{
-      it.done = cb.checked;
-      const all = JSON.parse(localStorage.getItem('checklist'));
+    cb.onchange=()=>{
+      it.done=cb.checked;
+      const all=JSON.parse(localStorage.getItem('checklist'));
       all[idx]=it; localStorage.setItem('checklist', JSON.stringify(all));
       renderChecklist(all);
     };
-    const del = document.createElement('button'); del.className='btn danger'; del.textContent='Remove';
-    del.onclick = ()=>{
-      const all = JSON.parse(localStorage.getItem('checklist'));
+    const del=document.createElement('button'); del.className='btn danger'; del.textContent='Remove';
+    del.onclick=()=>{
+      const all=JSON.parse(localStorage.getItem('checklist'));
       all.splice(idx,1); localStorage.setItem('checklist', JSON.stringify(all));
       renderChecklist(all);
     };
     div.appendChild(cb);
-    const inner = document.createElement('div'); inner.style.flex='1';
-    inner.appendChild(title);
+    const inner=document.createElement('div'); inner.style.flex='1'; inner.appendChild(title);
     div.appendChild(inner);
     div.appendChild(del);
     checkContainer.appendChild(div);
   });
 }
-document.getElementById('addItem').onclick = ()=>{
-  const v = document.getElementById('newItem').value.trim(); if(!v) return;
-  const all = JSON.parse(localStorage.getItem('checklist'));
+document.getElementById('addItem').onclick=()=>{
+  const v=document.getElementById('newItem').value.trim(); if(!v) return;
+  const all=JSON.parse(localStorage.getItem('checklist'));
   all.push({t:v,done:false}); localStorage.setItem('checklist', JSON.stringify(all));
-  document.getElementById('newItem').value="";
-  renderChecklist(all);
+  document.getElementById('newItem').value=""; renderChecklist(all);
 };
-document.getElementById('resetChecklist').onclick = ()=>{
-  localStorage.removeItem('checklist'); loadChecklist();
-};
+document.getElementById('resetChecklist').onclick=()=>{ localStorage.removeItem('checklist'); loadChecklist(); };
 loadChecklist();
 
-/* ---------- Prof. Katsura links (editable) ---------- */
+/* ---------- Prof. Katsura links ---------- */
 const profLinks = document.getElementById('profLinks');
 const DEFAULT_LINKS = [
   {title:"Katsura Laboratory (Keio) — Homepage", url:"https://www.katsura.sd.keio.ac.jp/"},
   {title:"Keio Researcher Database — Seiichiro Katsura", url:"https://k-ris.keio.ac.jp/html/100011690_en.html"},
-  {title:"Research Introduction Video", url:"https://www.youtube.com/watch?v=Q3fUgDhkl0g"},
-  {title:"Wave Dynamics in 4-ch Bilateral Teleoperation (Mechatronics, 2024)", url:"#"},
-  {title:"Modal Space Control with Elasticity (IEEJ JIA, 2023)", url:"#"},
-  {title:"Periodic/Aperiodic Separation Filter (IEEE T-IE, 2020)", url:"#"},
-  {title:"Energy Disturbance Observer (IEEJ JIA, 2014)", url:"#"},
-  {title:"Motion-Copying System — selected works", url:"#"}
+  {title:"Research Introduction Video", url:"https://www.youtube.com/watch?v=Q3fUgDhkl0g"}
 ];
 function loadLinks(){
   const list = JSON.parse(localStorage.getItem('profLinks')||'null') || DEFAULT_LINKS;
@@ -447,11 +622,11 @@ function loadLinks(){
 function renderLinks(list){
   profLinks.innerHTML="";
   list.forEach((ln,idx)=>{
-    const row = document.createElement('div'); row.className='link-item';
-    const a = document.createElement('a'); a.href=ln.url; a.target='_blank'; a.rel='noopener'; a.textContent = ln.title;
-    const del = document.createElement('button'); del.className='btn danger'; del.textContent='Remove';
-    del.onclick = ()=>{
-      const all = JSON.parse(localStorage.getItem('profLinks'));
+    const row=document.createElement('div'); row.className='link-item';
+    const a=document.createElement('a'); a.href=ln.url; a.target='_blank'; a.rel='noopener'; a.textContent=ln.title;
+    const del=document.createElement('button'); del.className='btn danger'; del.textContent='Remove';
+    del.onclick=()=>{
+      const all=JSON.parse(localStorage.getItem('profLinks'));
       all.splice(idx,1); localStorage.setItem('profLinks', JSON.stringify(all));
       renderLinks(all);
     };
@@ -459,23 +634,23 @@ function renderLinks(list){
     profLinks.appendChild(row);
   });
 }
-document.getElementById('addLink')?.addEventListener('click', ()=>{
-  const t = document.getElementById('linkTitle').value.trim();
-  const u = document.getElementById('linkURL').value.trim();
-  if(!t || !u) return;
-  const all = JSON.parse(localStorage.getItem('profLinks'));
-  all.unshift({title:t, url:u}); localStorage.setItem('profLinks', JSON.stringify(all));
+document.getElementById('addLink').onclick=()=>{
+  const t=document.getElementById('linkTitle').value.trim();
+  const u=document.getElementById('linkURL').value.trim();
+  if(!t||!u) return;
+  const all=JSON.parse(localStorage.getItem('profLinks'));
+  all.unshift({title:t,url:u}); localStorage.setItem('profLinks', JSON.stringify(all));
   document.getElementById('linkTitle').value=""; document.getElementById('linkURL').value="";
   renderLinks(all);
-});
+};
 loadLinks();
 
 /* ---------- Models ---------- */
 const modelList = document.getElementById('modelList');
 function loadModels(){
-  const list = JSON.parse(localStorage.getItem('models')||'null') || [
-    {title:"MCS Web Simulator", url:"https://kav33sh.github.io/MCS/", desc:"Record → resample → replay → error metrics. Mouse-to-arm motion copying demo."},
-    {title:"MCS Python Simulation", url:"#", desc:"Mouse → 2-link arm replay with PD & delay injection; RMSE/overshoot reports."}
+  const list=JSON.parse(localStorage.getItem('models')||'null')||[
+    {title:"MCS Python Simulation", url:"#", desc:"Mouse → 2-link arm replay with PD and delay injection. Reports RMSE & max error."},
+    {title:"Web MCS Demo", url:"#", desc:"HTML/JS demo: record, resample, IK, PD replay, error plots. Good for talks."}
   ];
   localStorage.setItem('models', JSON.stringify(list));
   renderModels(list);
@@ -483,14 +658,14 @@ function loadModels(){
 function renderModels(list){
   modelList.innerHTML="";
   list.forEach((m,idx)=>{
-    const row = document.createElement('div'); row.className='link-item';
-    const left = document.createElement('div');
-    left.innerHTML = `<div style="font-weight:600">${m.title}</div><div class="muted">${m.desc}</div>`;
-    const right = document.createElement('div');
-    const a = document.createElement('a'); a.href=m.url; a.target="_blank"; a.textContent = "Open";
-    const del = document.createElement('button'); del.className='btn danger'; del.textContent='Remove'; del.style.marginLeft='8px';
-    del.onclick = ()=>{
-      const all = JSON.parse(localStorage.getItem('models'));
+    const row=document.createElement('div'); row.className='link-item';
+    const left=document.createElement('div');
+    left.innerHTML=`<div style="font-weight:600">${m.title}</div><div class="muted">${m.desc}</div>`;
+    const right=document.createElement('div');
+    const a=document.createElement('a'); a.href=m.url; a.target="_blank"; a.textContent="Open";
+    const del=document.createElement('button'); del.className='btn danger'; del.textContent='Remove'; del.style.marginLeft='8px';
+    del.onclick=()=>{
+      const all=JSON.parse(localStorage.getItem('models'));
       all.splice(idx,1); localStorage.setItem('models', JSON.stringify(all));
       renderModels(all);
     };
@@ -499,45 +674,40 @@ function renderModels(list){
     modelList.appendChild(row);
   });
 }
-document.getElementById('addModel').onclick = ()=>{
-  const t = document.getElementById('modelTitle').value.trim();
-  const u = document.getElementById('modelURL').value.trim();
-  const d = document.getElementById('modelDesc').value.trim();
+document.getElementById('addModel').onclick=()=>{
+  const t=document.getElementById('modelTitle').value.trim();
+  const u=document.getElementById('modelURL').value.trim();
+  const d=document.getElementById('modelDesc').value.trim();
   if(!t) return;
-  const all = JSON.parse(localStorage.getItem('models'));
+  const all=JSON.parse(localStorage.getItem('models'));
   all.unshift({title:t, url:u||"#", desc:d||""});
   localStorage.setItem('models', JSON.stringify(all));
-  document.getElementById('modelTitle').value="";
-  document.getElementById('modelURL').value="";
-  document.getElementById('modelDesc').value="";
+  document.getElementById('modelTitle').value=""; document.getElementById('modelURL').value=""; document.getElementById('modelDesc').value="";
   renderModels(all);
 };
 loadModels();
 
-/* ---------- Articles (related work, editable) ---------- */
+/* ---------- Articles ---------- */
 const articleList = document.getElementById('articleList');
-const DEFAULT_ARTICLES = [
-  {title:"Bilateral teleoperation with wave variables — survey/notes", url:"#", notes:"Passivity over delays; ties to wave-impedance mapping."},
-  {title:"Haptic teleoperation for micromanipulation — review", url:"#", notes:"Evaluation frameworks & task metrics."},
-  {title:"Disturbance-Observer-Based Control in mechatronics", url:"#", notes:"DOB fundamentals useful for haptic precision."},
-  {title:"Passivity Observer / Controller (PO/PC) basics", url:"#", notes:"Energy balancing when delay varies."}
-];
 function loadArticles(){
-  const list = JSON.parse(localStorage.getItem('articles')||'null') || DEFAULT_ARTICLES;
+  const list=JSON.parse(localStorage.getItem('articles')||'null')||[
+    {title:"Bilateral teleoperation with wave variables — survey/notes", url:"#", notes:"Passivity guarantee via energy variables; tie to haptic delay robustness."},
+    {title:"Disturbance Observers in Mechatronics — overview", url:"#", notes:"DOB for friction/load disturbance rejection; aligns with precision haptics."}
+  ];
   localStorage.setItem('articles', JSON.stringify(list));
   renderArticles(list);
 }
 function renderArticles(list){
   articleList.innerHTML="";
   list.forEach((a,idx)=>{
-    const row = document.createElement('div'); row.className='link-item';
-    const left = document.createElement('div');
-    left.innerHTML = `<div style="font-weight:600">${a.title}</div><div class="muted">${a.notes||""}</div>`;
-    const right = document.createElement('div');
-    const link = document.createElement('a'); link.href=a.url; link.target="_blank"; link.textContent="Open";
-    const del = document.createElement('button'); del.className='btn danger'; del.textContent='Remove'; del.style.marginLeft='8px';
-    del.onclick = ()=>{
-      const all = JSON.parse(localStorage.getItem('articles'));
+    const row=document.createElement('div'); row.className='link-item';
+    const left=document.createElement('div');
+    left.innerHTML=`<div style="font-weight:600">${a.title}</div><div class="muted">${a.notes||""}</div>`;
+    const right=document.createElement('div');
+    const link=document.createElement('a'); link.href=a.url; link.target="_blank"; link.textContent="Open";
+    const del=document.createElement('button'); del.className='btn danger'; del.textContent='Remove'; del.style.marginLeft='8px';
+    del.onclick=()=>{
+      const all=JSON.parse(localStorage.getItem('articles'));
       all.splice(idx,1); localStorage.setItem('articles', JSON.stringify(all));
       renderArticles(all);
     };
@@ -546,17 +716,15 @@ function renderArticles(list){
     articleList.appendChild(row);
   });
 }
-document.getElementById('addArticle').onclick = ()=>{
-  const t = document.getElementById('articleTitle').value.trim();
-  const u = document.getElementById('articleURL').value.trim();
-  const n = document.getElementById('articleNotes').value.trim();
-  if(!t || !u) return;
-  const all = JSON.parse(localStorage.getItem('articles'));
+document.getElementById('addArticle').onclick=()=>{
+  const t=document.getElementById('articleTitle').value.trim();
+  const u=document.getElementById('articleURL').value.trim();
+  const n=document.getElementById('articleNotes').value.trim();
+  if(!t||!u) return;
+  const all=JSON.parse(localStorage.getItem('articles'));
   all.unshift({title:t, url:u, notes:n});
   localStorage.setItem('articles', JSON.stringify(all));
-  document.getElementById('articleTitle').value="";
-  document.getElementById('articleURL').value="";
-  document.getElementById('articleNotes').value="";
+  document.getElementById('articleTitle').value=""; document.getElementById('articleURL').value=""; document.getElementById('articleNotes').value="";
   renderArticles(all);
 };
 loadArticles();
