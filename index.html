@@ -354,22 +354,23 @@ document.getElementById('clearFiles').onclick = ()=>{
 };
 initDB().then(renderFiles);
 
-// ---------- Learnings rich editor ----------
-const editor = document.getElementById('editor');
-const noteSaved = document.getElementById('noteSaved');
-function loadNote(){ editor.innerHTML = localStorage.getItem('noteHTML') || 
-  `<h2>Week 1 — Foundations</h2>
-  <ul><li>Reviewed bilateral teleoperation and wave variables.</li>
-  <li>Built MCS (mouse → 2-link arm) & plotted RMSE.</li></ul>`; }
-loadNote();
-document.querySelectorAll('.toolbar [data-cmd]').forEach(btn=>{
-  btn.addEventListener('click', ()=> document.execCommand(btn.dataset.cmd, false, null));
+<script>
+// ---------- Learnings (Supabase-synced) ----------
+const editor       = document.getElementById('editor');
+const saveBtn      = document.getElementById('saveNote');
+const noteStatus   = document.getElementById('noteStatus');
+const autoSaveTgl  = document.getElementById('autoSaveToggle');
+
+// Basic formatting
+document.querySelectorAll('[data-cmd]').forEach(btn=>{
+  btn.addEventListener('click', ()=> document.execCommand(btn.dataset.cmd,false,null));
 });
 document.getElementById('h1').onclick = ()=> document.execCommand('formatBlock', false, 'h1');
 document.getElementById('h2').onclick = ()=> document.execCommand('formatBlock', false, 'h2');
 document.getElementById('bul').onclick = ()=> document.execCommand('insertUnorderedList', false, null);
 document.getElementById('img').onclick = ()=>{
-  const input = document.createElement('input'); input.type='file'; input.accept='image/*';
+  const input = document.createElement('input');
+  input.type='file'; input.accept='image/*';
   input.onchange = e=>{
     const f = e.target.files[0]; if(!f) return;
     const r = new FileReader();
@@ -378,10 +379,102 @@ document.getElementById('img').onclick = ()=>{
   };
   input.click();
 };
-document.getElementById('saveNote').onclick = ()=>{
-  localStorage.setItem('noteHTML', editor.innerHTML);
-  noteSaved.textContent = "Saved ✓"; setTimeout(()=>noteSaved.textContent="", 1200);
-};
+
+// Debounce helper
+function debounce(fn, ms=600){
+  let t; return (...args)=>{ clearTimeout(t); t = setTimeout(()=>fn(...args), ms); };
+}
+
+let currentUserId = null;
+let lastLoadedHTML = "";
+
+// Load note for current user
+async function loadNoteForUser(userId){
+  noteStatus.textContent = "Loading…";
+  const { data, error } = await supabase
+    .from('notes')
+    .select('content')
+    .eq('user_id', userId)
+    .single();
+
+  if(error && error.code !== 'PGRST116'){ // PGRST116 = row not found
+    console.error("Load note error:", error);
+    noteStatus.textContent = "Load failed";
+    return;
+  }
+
+  const html = data?.content || defaultWelcomeHTML();
+  editor.innerHTML = html;
+  lastLoadedHTML = html;
+  noteStatus.textContent = "Loaded ✓";
+}
+
+function defaultWelcomeHTML(){
+  return `<h2>Welcome — Start your Learnings</h2>
+  <p>These notes are saved to your Supabase account after you sign in.</p>
+  <ul>
+    <li>Paste images (stored inline as data URLs).</li>
+    <li>Keep reading summaries of Katsura Lab papers.</li>
+    <li>Document experiments for your wave impedance haptics plan.</li>
+  </ul>`;
+}
+
+// Save note (upsert by user_id)
+async function saveNote(){
+  if(!currentUserId){ noteStatus.textContent = "Sign in to save"; return; }
+  noteStatus.textContent = "Saving…";
+  const html = editor.innerHTML;
+
+  const { error } = await supabase
+    .from('notes')
+    .upsert({ user_id: currentUserId, content: html })
+    .eq('user_id', currentUserId);
+
+  if(error){
+    console.error("Save note error:", error);
+    noteStatus.textContent = "Save failed";
+  }else{
+    lastLoadedHTML = html;
+    noteStatus.textContent = "Saved ✓";
+  }
+}
+
+const debouncedSave = debounce(()=>{ if(autoSaveTgl.checked) saveNote(); }, 800);
+
+// Listen for edits (for autosave)
+editor.addEventListener('input', debouncedSave);
+
+// Manual save
+saveBtn.addEventListener('click', saveNote);
+
+// Restore autosave toggle from localStorage
+autoSaveTgl.checked = localStorage.getItem('autoSaveLearnings') === '1';
+autoSaveTgl.onchange = ()=> localStorage.setItem('autoSaveLearnings', autoSaveTgl.checked ? '1' : '0');
+
+// React to login/logout to load notes
+supabase.auth.onAuthStateChange(async (_evt, session)=>{
+  if(session?.user){
+    currentUserId = session.user.id;
+    await loadNoteForUser(currentUserId);
+  }else{
+    currentUserId = null;
+    editor.innerHTML = defaultWelcomeHTML();
+    noteStatus.textContent = "Not signed in";
+  }
+});
+
+// If user is already logged in on page load, load their note
+(async ()=>{
+  const { data: { user } } = await supabase.auth.getUser();
+  if(user){
+    currentUserId = user.id;
+    await loadNoteForUser(currentUserId);
+  }else{
+    editor.innerHTML = defaultWelcomeHTML();
+    noteStatus.textContent = "Not signed in";
+  }
+})();
+
 
 // ---------- Checklist ----------
 const DEFAULT_ITEMS = [
