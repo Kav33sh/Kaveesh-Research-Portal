@@ -152,23 +152,33 @@
     </div>
   </section>
 
-  <!-- LEARNINGS -->
-  <section id="learnings" class="card hidden">
-    <h2>Learnings (Notebook)</h2>
-    <p class="muted">Type notes, paste images, and format like a lightweight OneNote. All content is saved locally.</p>
-    <div class="toolbar">
-      <button class="btn" data-cmd="bold"><b>B</b></button>
-      <button class="btn" data-cmd="italic"><i>I</i></button>
-      <button class="btn" data-cmd="underline"><u>U</u></button>
-      <button class="btn" id="h1">H1</button>
-      <button class="btn" id="h2">H2</button>
-      <button class="btn" id="bul">• List</button>
-      <button class="btn" id="img">Insert Image</button>
-      <button class="btn primary" id="saveNote">Save</button>
-      <span class="muted" id="noteSaved"></span>
-    </div>
-    <div id="editor" class="editor" contenteditable="true"></div>
-  </section>
+ <!-- LEARNINGS (Supabase-backed) -->
+<section id="learnings" class="card hidden">
+  <h2>Learnings (Notebook)</h2>
+  <p class="muted">
+    Rich-text notes synced to your Supabase account (works across devices after sign-in).
+  </p>
+
+  <div class="row" style="gap:8px;align-items:center;margin:8px 0">
+    <button class="btn" data-cmd="bold"><b>B</b></button>
+    <button class="btn" data-cmd="italic"><i>I</i></button>
+    <button class="btn" data-cmd="underline"><u>U</u></button>
+    <button class="btn" id="h1">H1</button>
+    <button class="btn" id="h2">H2</button>
+    <button class="btn" id="bul">• List</button>
+    <button class="btn" id="img">Insert Image</button>
+    <button class="btn primary" id="saveNote">Save</button>
+
+    <span id="noteStatus" class="muted" style="margin-left:auto">Not signed in</span>
+    <label class="pill" style="cursor:pointer">
+      <input type="checkbox" id="autoSaveToggle" style="margin-right:6px"> Auto-save
+    </label>
+  </div>
+
+  <div id="editor" class="editor" contenteditable="true"
+       style="min-height:360px"></div>
+</section>
+
 
   <!-- CHECKLIST -->
   <section id="checklist" class="card hidden">
