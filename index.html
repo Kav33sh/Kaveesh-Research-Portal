@@ -361,6 +361,9 @@ const saveBtn      = document.getElementById('saveNote');
 const noteStatus   = document.getElementById('noteStatus');
 const autoSaveTgl  = document.getElementById('autoSaveToggle');
 
+let currentUserId = null;
+let lastLoadedHTML = "";
+
 // Basic formatting
 document.querySelectorAll('[data-cmd]').forEach(btn=>{
   btn.addEventListener('click', ()=> document.execCommand(btn.dataset.cmd,false,null));
@@ -384,21 +387,58 @@ document.getElementById('img').onclick = ()=>{
 function debounce(fn, ms=600){
   let t; return (...args)=>{ clearTimeout(t); t = setTimeout(()=>fn(...args), ms); };
 }
+const debouncedSave = debounce(()=>{ if(autoSaveTgl.checked && currentUserId) saveNote(); }, 800);
 
-let currentUserId = null;
-let lastLoadedHTML = "";
+// Default content
+function defaultWelcomeHTML(){
+  return `<h2>Learnings</h2>
+  <p>This notebook is <b>publicly readable</b>. Sign in to edit and auto-save.</p>
+  <ul>
+    <li>Record summaries of Katsura Lab papers.</li>
+    <li>Document experiments for wave-impedance haptics.</li>
+    <li>Paste images; they’re embedded inline.</li>
+  </ul>`;
+}
 
-// Load note for current user
-async function loadNoteForUser(userId){
-  noteStatus.textContent = "Loading…";
+// Load the public note (is_public = true), newest first
+async function loadPublicNote(){
+  noteStatus.textContent = "Loading public note…";
   const { data, error } = await supabase
     .from('notes')
-    .select('content')
-    .eq('user_id', userId)
-    .single();
+    .select('content, updated_at')
+    .eq('is_public', true)
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
-  if(error && error.code !== 'PGRST116'){ // PGRST116 = row not found
-    console.error("Load note error:", error);
+  if(error){
+    console.error("Load public note error:", error);
+    editor.innerHTML = defaultWelcomeHTML();
+    noteStatus.textContent = "Public note load failed";
+    return;
+  }
+
+  const html = data?.content || defaultWelcomeHTML();
+  editor.innerHTML = html;
+  lastLoadedHTML = html;
+  noteStatus.textContent = "Public (read-only)";
+  // Read-only for visitors
+  editor.setAttribute('contenteditable', 'false');
+  saveBtn.disabled = true;
+  autoSaveTgl.disabled = true;
+}
+
+// Load the signed-in user’s note (owner view)
+async function loadOwnNote(userId){
+  noteStatus.textContent = "Loading your note…";
+  const { data, error } = await supabase
+    .from('notes')
+    .select('content, is_public')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if(error){
+    console.error("Load own note error:", error);
     noteStatus.textContent = "Load failed";
     return;
   }
@@ -406,20 +446,14 @@ async function loadNoteForUser(userId){
   const html = data?.content || defaultWelcomeHTML();
   editor.innerHTML = html;
   lastLoadedHTML = html;
-  noteStatus.textContent = "Loaded ✓";
+  noteStatus.textContent = data ? (data.is_public ? "Loaded (public ✓)" : "Loaded (private)") : "New note";
+  // Editable for owner
+  editor.setAttribute('contenteditable', 'true');
+  saveBtn.disabled = false;
+  autoSaveTgl.disabled = false;
 }
 
-function defaultWelcomeHTML(){
-  return `<h2>Welcome — Start your Learnings</h2>
-  <p>These notes are saved to your Supabase account after you sign in.</p>
-  <ul>
-    <li>Paste images (stored inline as data URLs).</li>
-    <li>Keep reading summaries of Katsura Lab papers.</li>
-    <li>Document experiments for your wave impedance haptics plan.</li>
-  </ul>`;
-}
-
-// Save note (upsert by user_id)
+// Save (upsert) owner’s note
 async function saveNote(){
   if(!currentUserId){ noteStatus.textContent = "Sign in to save"; return; }
   noteStatus.textContent = "Saving…";
@@ -439,42 +473,174 @@ async function saveNote(){
   }
 }
 
-const debouncedSave = debounce(()=>{ if(autoSaveTgl.checked) saveNote(); }, 800);
-
-// Listen for edits (for autosave)
 editor.addEventListener('input', debouncedSave);
-
-// Manual save
 saveBtn.addEventListener('click', saveNote);
 
-// Restore autosave toggle from localStorage
+// Persist autosave preference
 autoSaveTgl.checked = localStorage.getItem('autoSaveLearnings') === '1';
 autoSaveTgl.onchange = ()=> localStorage.setItem('autoSaveLearnings', autoSaveTgl.checked ? '1' : '0');
 
-// React to login/logout to load notes
+// React to auth
 supabase.auth.onAuthStateChange(async (_evt, session)=>{
   if(session?.user){
     currentUserId = session.user.id;
-    await loadNoteForUser(currentUserId);
+    await loadOwnNote(currentUserId);
   }else{
     currentUserId = null;
-    editor.innerHTML = defaultWelcomeHTML();
-    noteStatus.textContent = "Not signed in";
+    await loadPublicNote();
   }
 });
 
-// If user is already logged in on page load, load their note
+// Initial load (handles refresh)
 (async ()=>{
   const { data: { user } } = await supabase.auth.getUser();
   if(user){
     currentUserId = user.id;
-    await loadNoteForUser(currentUserId);
+    await loadOwnNote(currentUserId);
   }else{
-    editor.innerHTML = defaultWelcomeHTML();
-    noteStatus.textContent = "Not signed in";
+    await loadPublicNote();
   }
 })();
+</script>
+What changes for visitors?
 
+They can read the latest note you’ve marked is_public = true.
+
+The editor is read-only, save/auto-save controls are disabled.
+
+What changes for you (when logged in)?
+
+Your note loads with edit + save enabled.
+
+You can toggle is_public with a one-time SQL update (or we could add a small UI switch later).
+
+That’s it!
+Public can read your Learnings.
+
+Only the authenticated owner (you) can insert/update.
+
+If you want, I can add a small toggle in the UI to switch your note between Public / Private (just flips is_public for your row).
+
+
+
+
+
+
+
+You said:
+Source
+
+Primary database
+
+Role
+postgres
+
+Run
+CTRL
+
+ERROR:  22P02: invalid input syntax for type uuid: "<YOUR_AUTH_USER_ID>"
+LINE 3: where user_id = '<YOUR_AUTH_USER_ID>';
+                        ^
+
+
+ChatGPT said:
+You ran the SQL with a placeholder. You need to replace <YOUR_AUTH_USER_ID> with your actual UUID from Supabase Auth (or set it from the frontend). Here are 3 quick ways to fix it—pick one.
+
+Option A — Copy your user ID from the dashboard (fastest)
+In Supabase: Authentication → Users
+
+Click your GitHub user → copy the UUID (the long id).
+
+Run this in SQL editor (paste your UUID):
+
+sql
+Copy
+Edit
+-- make sure you have a row; if not, create one
+insert into public.notes (user_id, content, is_public)
+values ('PASTE-UUID-HERE', '', true)
+on conflict (user_id) do update set is_public = true;
+That sets your note to public (readable by everyone) and creates it if missing.
+
+Option B — Query Auth users via SQL (if you prefer SQL only)
+sql
+Copy
+Edit
+-- See all auth users (id + email)
+select id, email from auth.users;
+
+-- Then set your note public using the id you see
+update public.notes
+set is_public = true
+where user_id = 'PASTE-UUID-HERE';
+If you don’t have a row yet:
+
+sql
+Copy
+Edit
+insert into public.notes (user_id, content, is_public)
+values ('PASTE-UUID-HERE', '', true)
+on conflict (user_id) do update set is_public = true;
+Option C — Toggle it from your site (no SQL editor)
+Add this tiny button somewhere on your page (e.g., near the Learnings header):
+
+html
+Copy
+Edit
+<button class="btn" id="togglePublic">Make Public/Private</button>
+<span id="pubState" class="muted"></span>
+Then add the script:
+
+html
+Copy
+Edit
+<script type="module">
+  const toggleBtn = document.getElementById('togglePublic');
+  const pubState  = document.getElementById('pubState');
+
+  async function refreshPubState(userId){
+    const { data, error } = await supabase
+      .from('notes')
+      .select('is_public')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (!error && data) {
+      pubState.textContent = data.is_public ? "Public" : "Private";
+    }
+  }
+
+  toggleBtn.onclick = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if(!user){ alert("Sign in first."); return; }
+
+    // ensure a row exists
+    await supabase.from('notes')
+      .upsert({ user_id: user.id, content: '' })
+      .eq('user_id', user.id);
+
+    // flip the flag
+    const { data, error } = await supabase
+      .from('notes')
+      .select('is_public')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    const next = !(data?.is_public);
+    const { error: updErr } = await supabase
+      .from('notes')
+      .update({ is_public: next })
+      .eq('user_id', user.id);
+
+    if (updErr) { alert("Failed to toggle"); console.error(updErr); return; }
+    pubState.textContent = next ? "Public" : "Private";
+    alert(`Learnings is now ${next ? "Public (readable by anyone)" : "Private (only you)"}.`);
+  };
+
+  // show current state if already signed in
+  (async ()=>{
+    const { data: { user } } = await supabase.auth.getUser();
+    if(user) await refreshPubState(user.id);
+  })();
 
 // ---------- Checklist ----------
 const DEFAULT_ITEMS = [
