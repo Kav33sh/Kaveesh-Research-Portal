@@ -189,61 +189,193 @@
     </div>
   </section>
 
-  <!-- PROF. KATSURA -->
-  <section id="prof" class="card hidden">
-    <h2>Prof. Katsura — Lab & Papers</h2>
-    <p class="muted">Quick access to laboratory websites and selected publications relevant to your topic.</p>
-    <div class="grid" id="profLinks" style="gap:8px"></div>
-    <div class="card" style="margin-top:16px">
-      <h3>Add Link</h3>
-      <div class="row">
-        <input id="linkTitle" type="text" placeholder="Title (e.g., Wave Dynamics paper)">
-        <input id="linkURL" type="url" placeholder="https://...">
-        <button class="btn" id="addLink">Add</button>
-      </div>
-    </div>
-  </section>
+  <script>
+// ---------- Prof. Katsura links ----------
+const profLinks = document.getElementById('profLinks');
 
-  <!-- MODELS -->
-  <section id="models" class="card hidden">
-    <h2>Models & Demos</h2>
-    <p class="muted">Register simulations, code repos, or small demos. Paste links to GitHub, Colab, or upload small assets.</p>
-    <div id="modelList" class="grid" style="gap:8px"></div>
-    <div class="card" style="margin-top:16px">
-      <h3>Add Model</h3>
-      <div class="grid two">
-        <input id="modelTitle" type="text" placeholder="e.g., MCS Python Simulation">
-        <input id="modelURL" type="url" placeholder="https://github.com/... or local file link">
-      </div>
-      <textarea id="modelDesc" placeholder="Short description (what it shows, key metrics, how it ties to wave impedance)..."></textarea>
-      <div class="row">
-        <button class="btn" id="addModel">Add Model</button>
-      </div>
-    </div>
-  </section>
+/* Preloaded set (curated from your list; you can add more anytime).
+   Tip: you can paste more with the "Add Link" form on the page. */
+const DEFAULT_LINKS = [
+  {title:"Katsura Laboratory (Keio) — Homepage", url:"https://www.katsura.sd.keio.ac.jp/"},
+  {title:"Keio Researcher Database — Seiichiro Katsura", url:"https://k-ris.keio.ac.jp/html/100011690_en.html"},
+  {title:"Research Introduction Video", url:"https://www.youtube.com/watch?v=Q3fUgDhkl0g"},
+  {title:"Wave Dynamics Intrinsic in Symmetric Four-channel Bilateral Teleoperation (Mechatronics, 2024)", url:"#"},
+  {title:"Analysis of Magnetic Domain Structure of Grain-Oriented Electrical Steels (IEEE Trans. Magnetics, 2024)", url:"#"},
+  {title:"Singularity-Free 3-Leg 6-DOF Spatial Parallel Robot with Actuation Redundancy (IEEJ JIA, 2023)", url:"#"},
+  {title:"Robust Velocity Control for Electromagnetic Friction Brake Based on Disturbance Observer (IEEJ JIA, 2023)", url:"#"},
+  {title:"Robust Speed Control of Uncertain Two-Mass System (Energies, 2023)", url:"#"},
+  {title:"Fuzzy Type II Multi-layer Kalman Filter for Two-mass Drive Parameter ID (BPAS Tech Sci, 2023)", url:"#"},
+  {title:"Motion-Copying System with In-Tool Sensing (IEEJ JIA, 2023)", url:"#"},
+  {title:"Friction-Imaging Device via Cascading Stimuli Responsiveness (Materials Horizons, 2023)", url:"#"},
+  {title:"Thermoelectric Cooling Application to Motors (IEEJ JIA, 2023)", url:"#"},
+  {title:"Modal Space Control of Bilateral System with Elasticity (IEEJ JIA, 2023)", url:"#"},
+  {title:"Involuntary Stabilization in Discrete-Event Physical HRI (IEEE TSMC: Systems, 2023)", url:"#"},
+  {title:"Differential Evolution with Local Search for Adaptive Periodic-DOB (IEEE T-IE, 2021)", url:"#"},
+  {title:"Acceleration-based DOB for Hybrid Control of Redundant Systems (IEEE T-IE, 2021)", url:"#"},
+  {title:"Variation Model Abstraction & Adaptive Control (EDM) (IEEE OJIES, 2021)", url:"#"},
+  {title:"Package Leak Detection via Aperiodic Anomaly Extraction (IEEE JESTIE, 2021)", url:"#"},
+  {title:"Energy/Phase Control of Hopping Robot (Precision Engineering, 2021)", url:"#"},
+  {title:"Hierarchical Abstraction for Reaction Torque Observer (IEEE JESTIE, 2021)", url:"#"},
+  {title:"Acoustic Impedance Control for Generating Virtual Wall (IEEJ JIA, 2020)", url:"#"},
+  {title:"Periodic/Aperiodic Motion Control using Separation Filter (IEEE T-IE, 2020)", url:"#"},
+  {title:"Precise Slave-side Force Control for Security in Bilateral Control (Precision Engineering, 2020)", url:"#"},
+  {title:"Thermal Rendering Based on Thermal Diffusion Equation (IEEJ JIA, 2019)", url:"#"},
+  {title:"Hybrid Motion Reproduction Using Motion-Copying System (IEEJ JIA, 2019)", url:"#"},
+  {title:"Vibration Suppression of Weighing Cell using Wave Control (IEEJ JIA, 2019)", url:"#"},
+  {title:"Multirate Kalman Filter for Power Systems with Inverter (IEEJ JIA, 2019)", url:"#"},
+  {title:"Variable Heat Disturbance Observer for Peltier Control (IEEJ JIA, 2019)", url:"#"},
+  {title:"Separated Periodic/Aperiodic State Feedback (Automatica, 2019)", url:"#"},
+  {title:"Interpolation of a Clothoid Curve w/ Discretization Error (IEEE T-II, 2018)", url:"#"},
+  {title:"Thermal Propagation Control via Thermal Diffusion Equation (IEEE T-IE, 2018)", url:"#"},
+  {title:"Adaptive Periodic-Disturbance Observer (IEEE T-II, 2018)", url:"#"},
+  {title:"Spatial Disturbance Suppression of Flexible System (IEEJ JIA, 2018)", url:"#"},
+  {title:"Sensing of Heat Source in Deep Layer (IEEJ JIA, 2018)", url:"#"},
+  {title:"Mode-Space Bilateral Control/Decoupling (Advanced Robotics, 2013)", url:"#"},
+  {title:"Energy Disturbance Observer for Reaction Energy (IEEJ JIA, 2014)", url:"#"},
+  {title:"Realization of Simultaneity under Comm. Delay (IEEJ JIA, 2015)", url:"#"},
+  {title:"High-Stiff Motion Reproduction (IEEE T-IE, 2015)", url:"#"},
+  {title:"Motion Reproduction with Environmental Disturbance Compensation (IEEE T-IE, 2015)", url:"#"},
+  {title:"Fine Force Reproduction via Motion-Copying + Accel Observer (IEEE T-IE, 2014)", url:"#"},
+  {title:"Multi-DOF Motion Reproduction with Velocity Constraint (IEEE T-IE, 2014)", url:"#"},
+  {title:"Industrial Applications of the Kalman Filter — Review (IEEE T-IE, 2013)", url:"#"}
+];
 
-  <!-- ARTICLES -->
-  <section id="articles" class="card hidden">
-    <h2>Articles & Papers (Related Work)</h2>
-    <p class="muted">Collect papers related to wave impedance control, bilateral teleoperation, disturbance observers, and haptics.</p>
-    <div id="articleList" class="grid" style="gap:8px"></div>
-    <div class="card" style="margin-top:16px">
-      <h3>Add Article</h3>
-      <div class="grid two">
-        <input id="articleTitle" type="text" placeholder="Paper title">
-        <input id="articleURL" type="url" placeholder="https://doi.org/... or publisher link">
-      </div>
-      <textarea id="articleNotes" placeholder="Why is this relevant to your plan? Key insight or quote (paraphrase)."></textarea>
-      <div class="row">
-        <button class="btn" id="addArticle">Add Article</button>
-      </div>
-    </div>
-  </section>
-</main>
+function loadLinks(){
+  const list = JSON.parse(localStorage.getItem('profLinks')||'null') || DEFAULT_LINKS;
+  localStorage.setItem('profLinks', JSON.stringify(list));
+  renderLinks(list);
+}
+function renderLinks(list){
+  profLinks.innerHTML="";
+  list.forEach((ln,idx)=>{
+    const row = document.createElement('div'); row.className='link-item';
+    const a = document.createElement('a'); a.href=ln.url; a.target='_blank'; a.rel='noopener';
+    a.textContent = ln.title;
+    const del = document.createElement('button'); del.className='btn danger'; del.textContent='Remove';
+    del.onclick = ()=>{
+      const all = JSON.parse(localStorage.getItem('profLinks'));
+      all.splice(idx,1); localStorage.setItem('profLinks', JSON.stringify(all));
+      renderLinks(all);
+    };
+    row.appendChild(a); row.appendChild(del);
+    profLinks.appendChild(row);
+  });
+}
+document.getElementById('addLink').onclick = ()=>{
+  const t = document.getElementById('linkTitle').value.trim();
+  const u = document.getElementById('linkURL').value.trim();
+  if(!t || !u) return;
+  const all = JSON.parse(localStorage.getItem('profLinks'));
+  all.unshift({title:t, url:u}); localStorage.setItem('profLinks', JSON.stringify(all));
+  document.getElementById('linkTitle').value=""; document.getElementById('linkURL').value="";
+  renderLinks(all);
+};
+loadLinks();
+</script>
 
-<footer>
-  Local notes & files are private in your browser. Public posts & images are loaded from Supabase so anyone can view them.
-</footer>
+
+ <script>
+// ---------- Models ----------
+const modelList = document.getElementById('modelList');
+function loadModels(){
+  const list = JSON.parse(localStorage.getItem('models')||'null') || [
+    {title:"MCS Web Simulator", url:"https://kav33sh.github.io/MCS/", desc:"Record → resample → replay → error metrics. Mouse-to-arm motion copying demo for talks."},
+    {title:"MCS Python Simulation", url:"#", desc:"Mouse → 2-link arm replay with PD and delay injection. Reports RMSE & max error."}
+  ];
+  localStorage.setItem('models', JSON.stringify(list));
+  renderModels(list);
+}
+function renderModels(list){
+  modelList.innerHTML="";
+  list.forEach((m,idx)=>{
+    const row = document.createElement('div'); row.className='link-item';
+    const left = document.createElement('div');
+    left.innerHTML = `<div style="font-weight:600">${m.title}</div><div class="muted">${m.desc}</div>`;
+    const right = document.createElement('div');
+    const a = document.createElement('a'); a.href=m.url; a.target="_blank"; a.textContent = "Open";
+    const del = document.createElement('button'); del.className='btn danger'; del.textContent='Remove'; del.style.marginLeft='8px';
+    del.onclick = ()=>{
+      const all = JSON.parse(localStorage.getItem('models'));
+      all.splice(idx,1); localStorage.setItem('models', JSON.stringify(all));
+      renderModels(all);
+    };
+    right.appendChild(a); right.appendChild(del);
+    row.appendChild(left); row.appendChild(right);
+    modelList.appendChild(row);
+  });
+}
+document.getElementById('addModel').onclick = ()=>{
+  const t = document.getElementById('modelTitle').value.trim();
+  const u = document.getElementById('modelURL').value.trim();
+  const d = document.getElementById('modelDesc').value.trim();
+  if(!t) return;
+  const all = JSON.parse(localStorage.getItem('models'));
+  all.unshift({title:t, url:u||"#", desc:d||""});
+  localStorage.setItem('models', JSON.stringify(all));
+  document.getElementById('modelTitle').value="";
+  document.getElementById('modelURL').value="";
+  document.getElementById('modelDesc').value="";
+  renderModels(all);
+};
+loadModels();
+</script>
+
+
+  <script>
+// ---------- Articles ----------
+const articleList = document.getElementById('articleList');
+
+/* Related (non-Katsura) and cross-supporting works */
+const DEFAULT_ARTICLES = [
+  {title:"Bilateral Teleoperation with Wave Variables — Survey/Notes", url:"#", notes:"Passivity over constant delays; foundation for wave-impedance mapping."},
+  {title:"Haptic Teleoperation for Micromanipulation & Microassembly — Review (IEEE TASE, 2013)", url:"#", notes:"Broader haptic teleop landscape and evaluation practices."},
+  {title:"Fine Manipulation via Fractal Impedance Control (arXiv 2021)", url:"#", notes:"Adaptive impedance for precision tasks under delay; useful design ideas."},
+  {title:"Self-Tuning Impedance-based Interaction Planner (arXiv 2022)", url:"#", notes:"Adaptive impedance for exploration under model uncertainty."},
+  {title:"Experimental Evaluation of Haptic Feedback Accuracy (Actuators, 2022)", url:"#", notes:"Noise, accuracy, and sensor integration—good validation blueprint."},
+  {title:"Passivity Observer / Passivity Controller (PO/PC) Basics", url:"#", notes:"Complementary energy-tank idea for delay-robust haptics."},
+  {title:"Wave Dynamics in 4-ch Bilateral Teleoperation (Mechatronics, 2024)", url:"#", notes:"Especially relevant to your wave-impedance VR/teleop theme."}
+];
+
+function loadArticles(){
+  const list = JSON.parse(localStorage.getItem('articles')||'null') || DEFAULT_ARTICLES;
+  localStorage.setItem('articles', JSON.stringify(list));
+  renderArticles(list);
+}
+function renderArticles(list){
+  articleList.innerHTML="";
+  list.forEach((a,idx)=>{
+    const row = document.createElement('div'); row.className='link-item';
+    const left = document.createElement('div');
+    left.innerHTML = `<div style="font-weight:600">${a.title}</div><div class="muted">${a.notes||""}</div>`;
+    const right = document.createElement('div');
+    const link = document.createElement('a'); link.href=a.url; link.target="_blank"; link.textContent="Open";
+    const del = document.createElement('button'); del.className='btn danger'; del.textContent='Remove'; del.style.marginLeft='8px';
+    del.onclick = ()=>{
+      const all = JSON.parse(localStorage.getItem('articles'));
+      all.splice(idx,1); localStorage.setItem('articles', JSON.stringify(all));
+      renderArticles(all);
+    };
+    right.appendChild(link); right.appendChild(del);
+    row.appendChild(left); row.appendChild(right);
+    articleList.appendChild(row);
+  });
+}
+document.getElementById('addArticle').onclick = ()=>{
+  const t = document.getElementById('articleTitle').value.trim();
+  const u = document.getElementById('articleURL').value.trim();
+  const n = document.getElementById('articleNotes').value.trim();
+  if(!t || !u) return;
+  const all = JSON.parse(localStorage.getItem('articles'));
+  all.unshift({title:t, url:u, notes:n});
+  localStorage.setItem('articles', JSON.stringify(all));
+  document.getElementById('articleTitle').value="";
+  document.getElementById('articleURL').value="";
+  document.getElementById('articleNotes').value="";
+  renderArticles(all);
+};
+loadArticles();
+</script>
+
 
 <!-- App logic -->
 <script>
